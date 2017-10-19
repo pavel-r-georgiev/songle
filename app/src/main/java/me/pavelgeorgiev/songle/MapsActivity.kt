@@ -22,7 +22,6 @@ import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.location.LocationListener;
 import kotlinx.android.synthetic.main.activity_maps.*
-import android.content.DialogInterface
 import android.os.Build
 import android.support.v7.app.AlertDialog
 import android.widget.Toast
@@ -64,6 +63,7 @@ class MapsActivity :
         super.onStart()
         mGoogleApiClient.connect()
     }
+
     override fun onStop() {
         super.onStop()
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected) {
@@ -71,23 +71,20 @@ class MapsActivity :
         }
     }
 
-    override fun onConnected(connectionHint: Bundle?){
-        val mLocationRequest = LocationRequest()
-        mLocationRequest.interval = LOCATION_REQUEST_INTERVAL
-        mLocationRequest.fastestInterval = LOCATION_REQUEST_FASTEST_INTERVAL
-        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+    override fun onPause() {
+        super.onPause()
 
-        val permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-
-        if(permissionCheck == PackageManager.PERMISSION_GRANTED){
-            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this)
+//        Stop location updates when Activity is not active
+        if(mGoogleApiClient != null){
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
     }
+
+
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
+     * This is where we can add markers or lines, add listeners or move the camera
      * If Google Play services is not installed on the device, the user will be prompted to install
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
@@ -115,10 +112,32 @@ class MapsActivity :
         mMap.uiSettings.isMyLocationButtonEnabled = true
     }
 
+    /**
+     * Invoked once GoogleApiClient is connected.
+     * If location permission is given request location update.
+     */
+    override fun onConnected(connectionHint: Bundle?){
+        val mLocationRequest = LocationRequest()
+        mLocationRequest.interval = LOCATION_REQUEST_INTERVAL
+        mLocationRequest.fastestInterval = LOCATION_REQUEST_FASTEST_INTERVAL
+        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+
+        val permissionCheck = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+
+        if(permissionCheck == PackageManager.PERMISSION_GRANTED){
+            LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient, mLocationRequest, this)
+        }
+    }
+
+    /**
+     * Checks if location permission is given.
+     * If that is not the case, it prompts the informs the user that location permission is required
+     * and prompts them to give location permission to the app.
+     */
     private fun checkLocationPermission() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
 
-            // Should we show an explanation?
+            // Should we show an explanation
             if (ActivityCompat.shouldShowRequestPermissionRationale(this,
                     Manifest.permission.ACCESS_FINE_LOCATION)) {
 
@@ -128,7 +147,7 @@ class MapsActivity :
                 AlertDialog.Builder(this)
                         .setTitle("Location Permission Needed")
                         .setMessage("This app needs the Location permission, please accept to use location functionality")
-                        .setPositiveButton("OK", DialogInterface.OnClickListener { dialogInterface, i ->
+                        .setPositiveButton("OK", { _, _ ->
                             //Prompt the user once explanation has been shown
                             ActivityCompat.requestPermissions(this,
                                     arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
@@ -136,7 +155,6 @@ class MapsActivity :
                         })
                         .create()
                         .show()
-
 
             } else {
                 // No explanation needed, we can request the permission.
@@ -146,6 +164,7 @@ class MapsActivity :
             }
         }
     }
+
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
@@ -160,15 +179,14 @@ class MapsActivity :
                             == PackageManager.PERMISSION_GRANTED) {
 
                         if (mGoogleApiClient == null) {
-                            buildGoogleApiClient();
+                            buildGoogleApiClient()
                         }
-                        mMap.setMyLocationEnabled(true);
+                        mMap.isMyLocationEnabled = true
                     }
 
                 } else {
-
                     // Permission denied. Disable the functionality that depends on this permission.
-                    Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show();
+                    Toast.makeText(this, "Permission denied", Toast.LENGTH_LONG).show()
                 }
             }
         }
@@ -176,7 +194,7 @@ class MapsActivity :
 
 
     /**
-     * Put the activity in immersive sticky mode
+     * Puts the activity in immersive sticky mode
      */
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
@@ -192,15 +210,6 @@ class MapsActivity :
     }
 
 
-    override fun onPause() {
-        super.onPause()
-
-//        Stop location updates when Activity is not active
-        if(mGoogleApiClient != null){
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
-        }
-    }
-
     private fun buildGoogleApiClient() {
         mGoogleApiClient = GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -210,22 +219,21 @@ class MapsActivity :
     }
 
     override fun onConnectionSuspended(flag : Int) {
-        println(">>>> onConnectionSuspended")
+        println(">>>> Connection to Google APIs suspended. $TAG [onConnectionSuspended")
     }
 
     override fun onConnectionFailed(result : ConnectionResult) {
         // An unresolvable error has occurred and a connection to Google APIs
         // could not be established. Display an error message, or handle
         // the failure silently
-        println(">>>> onConnectionFailed")
+        println(">>>> Connection to Google APIs could not be established. $TAG [onConnectionFailed")
     }
 
     override fun onLocationChanged(location: Location?) {
         if(location == null) {
-            println("[onLocationChanged] Location unknown")
+            println("$TAG [onLocationChanged] Location unknown")
             return
         }
-
 
         if (mCurrLocationMarker != null) {
             mCurrLocationMarker!!.remove()
@@ -239,8 +247,8 @@ class MapsActivity :
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN))
         mCurrLocationMarker = mMap.addMarker(markerOptions)
 
-        //move map camera
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 20F));
+        //Move map camera
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18F));
     }
 
 }
