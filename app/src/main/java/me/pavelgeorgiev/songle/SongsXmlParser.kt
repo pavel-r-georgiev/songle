@@ -51,7 +51,7 @@ class SongsXmlParser {
     private fun readSong(parser: XmlPullParser): Song {
         parser.require(XmlPullParser.START_TAG, ns, SONG_TAG)
 
-        var number = -1
+        var number = ""
         var artist = ""
         var title = ""
         var link = ""
@@ -62,7 +62,7 @@ class SongsXmlParser {
             }
 
             when(parser.name){
-                NUMBER_TAG -> number = readTagText(parser, NUMBER_TAG).toInt()
+                NUMBER_TAG -> number = readTagText(parser, NUMBER_TAG)
                 ARTIST_TAG -> artist = readTagText(parser, ARTIST_TAG)
                 TITLE_TAG -> title = readTagText(parser, TITLE_TAG)
                 LINK_TAG -> link = readTagText(parser, LINK_TAG)

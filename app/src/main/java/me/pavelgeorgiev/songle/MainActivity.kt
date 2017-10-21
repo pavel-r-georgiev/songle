@@ -16,6 +16,7 @@ class MainActivity : AppCompatActivity(), DownloadCallback {
     private lateinit var mLayoutManager: RecyclerView.LayoutManager
     private lateinit var mAdapter: RecyclerView.Adapter<SongAdapter.ViewHolder>
     private var mSongs = mutableListOf<Song>()
+    private var mContext = this
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -50,13 +51,12 @@ class MainActivity : AppCompatActivity(), DownloadCallback {
         DownloadXmlService(this).execute(getString(R.string.songs_xml_url))
     }
 
-    fun onMapSelect(view : View){
-//        val intent = Intent(this, MapsActivity::class.java)
-//        startActivity(intent)
+    fun onMapSelect(number : String){
+        val intent = Intent(mContext, MapsActivity::class.java)
+        startActivity(intent)
     }
 
     override fun downloadComplete(result: List<Song>) {
-        result.forEach({ println(it.title) })
         mSongs.clear()
         mSongs.addAll(result)
         mAdapter.notifyDataSetChanged()

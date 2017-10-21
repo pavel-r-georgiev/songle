@@ -1,6 +1,7 @@
 package me.pavelgeorgiev.songle
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.support.v7.app.AppCompatActivity
@@ -40,6 +41,7 @@ class MapsActivity :
     private lateinit var mGoogleApiClient: GoogleApiClient
     private lateinit var mLocationRequest: LocationRequest
     private lateinit var mLastLocation: Location
+    private lateinit var mSongNumber: String
     private var mCurrLocationMarker: Marker? = null
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
     val TAG = "MapsActivity"
@@ -57,6 +59,9 @@ class MapsActivity :
         mapFragment.getMapAsync(this)
 
         buildGoogleApiClient()
+
+        val songNumber = intent.getStringExtra("NUMBER")
+
     }
 
     override fun onStart() {
