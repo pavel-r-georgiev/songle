@@ -1,16 +1,16 @@
 package me.pavelgeorgiev.songle
 
+import android.content.Context
 import android.content.Intent
-import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.view.View
 import kotlinx.android.synthetic.main.activity_main.*
 
-class MainActivity : AppCompatActivity(), DownloadCallback {
+class MainActivity : AppCompatActivity(), DownloadXmlCallback {
     private var receiver = NetworkReceiver()
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mLayoutManager: RecyclerView.LayoutManager
@@ -35,8 +35,26 @@ class MainActivity : AppCompatActivity(), DownloadCallback {
         mAdapter = SongAdapter(mSongs)
         mRecyclerView.adapter = mAdapter
 
-        getSongs()
+        if (isNetworkConnected()) {
+            getSongs()
+        } else {
+            AlertDialog.Builder(this).setTitle("No Internet Connection")
+                    .setMessage("Please check your internet connection and try again")
+                    .setPositiveButton(android.R.string.ok) { _, _ -> }
+                    .setIcon(android.R.drawable.ic_dialog_alert).show()
+        }
 
+
+
+    }
+
+    /**
+     * Checks if device is connected to the Internet
+     */
+    private fun isNetworkConnected(): Boolean {
+        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val networkInfo = connectivityManager.activeNetworkInfo
+        return networkInfo != null && networkInfo.isConnected
     }
 
 //    override fun onDestroy() {

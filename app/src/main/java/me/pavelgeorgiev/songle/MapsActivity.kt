@@ -1,7 +1,6 @@
 package me.pavelgeorgiev.songle
 
 import android.Manifest
-import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
 import android.support.v7.app.AppCompatActivity
@@ -18,15 +17,17 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.Marker
-import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.location.LocationListener;
-import kotlinx.android.synthetic.main.activity_maps.*
 import android.os.Build
 import android.support.v7.app.AlertDialog
 import android.widget.Toast
-import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.google.android.gms.maps.model.*
+import com.google.maps.android.data.kml.KmlLayer
+import com.google.maps.android.data.kml.KmlPlacemark
+import com.google.maps.android.data.kml.KmlPolygon
+import org.xmlpull.v1.XmlPullParserException
+import java.io.IOException
+import java.io.InputStream
 
 
 @Suppress("DEPRECATION")
@@ -35,7 +36,8 @@ class MapsActivity :
         OnMapReadyCallback,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        LocationListener {
+        LocationListener,
+        DownloadKmlCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var mGoogleApiClient: GoogleApiClient
@@ -60,8 +62,10 @@ class MapsActivity :
 
         buildGoogleApiClient()
 
-        val songNumber = intent.getStringExtra("NUMBER")
+        mSongNumber = intent.getStringExtra("NUMBER")
 
+
+        DownloadKmlService(this).execute("${getString(R.string.maps_base_url)}/$mSongNumber/map5.kml")
     }
 
     override fun onStart() {
@@ -115,7 +119,18 @@ class MapsActivity :
 
         // Add ”My location” button to the user interface
         mMap.uiSettings.isMyLocationButtonEnabled = true
+
     }
+
+    /**
+     * Invoked after KML file has been downloaded. Loads KML layout on the map.
+     */
+    @Throws(XmlPullParserException::class, IOException::class)
+    override fun downloadComplete(bytes: ByteArray) {
+        val layer = KmlLayer(mMap, bytes.inputStream(), applicationContext)
+        layer.addLayerToMap()
+    }
+
 
     /**
      * Invoked once GoogleApiClient is connected.

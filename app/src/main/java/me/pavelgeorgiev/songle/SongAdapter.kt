@@ -30,11 +30,9 @@ class SongAdapter (private val songs: List<Song>)
         intent.putExtra("NUMBER", song.number)
 
 
-
-        holder.title.text = if(Math.random() > 0.5) song.title else "Unknown"
         holder.artist.text = song.artist
-        holder.title.text = song.title
-        holder.link.text = song.link
+        holder.title.text = if(Math.random() > 0.5) song.title else "Unknown"
+//        holder.link.text = song.link
 
         holder.cv.setOnClickListener({ holder.cv.context.startActivity(intent) })
     }
