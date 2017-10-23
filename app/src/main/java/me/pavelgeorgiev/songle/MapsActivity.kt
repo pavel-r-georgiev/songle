@@ -20,14 +20,13 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.location.LocationListener;
 import android.os.Build
 import android.support.v7.app.AlertDialog
+import android.util.Log
 import android.widget.Toast
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.data.kml.KmlLayer
-import com.google.maps.android.data.kml.KmlPlacemark
-import com.google.maps.android.data.kml.KmlPolygon
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
-import java.io.InputStream
+import java.io.LineNumberReader
 
 
 @Suppress("DEPRECATION")
@@ -37,18 +36,22 @@ class MapsActivity :
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
-        DownloadKmlCallback {
+        DownloadFileCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var mGoogleApiClient: GoogleApiClient
     private lateinit var mLocationRequest: LocationRequest
     private lateinit var mLastLocation: Location
+    private lateinit var mLayer: KmlLayer
     private lateinit var mSongNumber: String
+    private var mLyrics = HashMap<Int, List<String>>()
     private var mCurrLocationMarker: Marker? = null
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
     val TAG = "MapsActivity"
     val LOCATION_REQUEST_INTERVAL: Long = 5000
     val LOCATION_REQUEST_FASTEST_INTERVAL: Long = 1000
+    val KML_TYPE = "KML"
+    val TXT_TYPE = "TXT"
 
 
 
@@ -64,8 +67,9 @@ class MapsActivity :
 
         mSongNumber = intent.getStringExtra("NUMBER")
 
-
-        DownloadKmlService(this).execute("${getString(R.string.maps_base_url)}/$mSongNumber/map5.kml")
+        var baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
+        DownloadFileService(this, KML_TYPE).execute("$baseUrl/map5.kml")
+        DownloadFileService(this,  TXT_TYPE).execute("$baseUrl/words.txt")
     }
 
     override fun onStart() {
@@ -87,6 +91,8 @@ class MapsActivity :
         if(mGoogleApiClient != null){
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
+
+        mLayer.removeLayerFromMap()
     }
 
 
@@ -126,11 +132,51 @@ class MapsActivity :
      * Invoked after KML file has been downloaded. Loads KML layout on the map.
      */
     @Throws(XmlPullParserException::class, IOException::class)
-    override fun downloadComplete(bytes: ByteArray) {
-        val layer = KmlLayer(mMap, bytes.inputStream(), applicationContext)
-        layer.addLayerToMap()
+    override fun downloadComplete(bytes: ByteArray, fileType: String) {
+        if(fileType == KML_TYPE) {
+           onKmlDownload(bytes)
+        }
+        if(fileType == TXT_TYPE){
+            onTxtDownload(bytes)
+        }
     }
 
+    private fun onTxtDownload(bytes: ByteArray) {
+        val inputStream = bytes.inputStream()
+
+        inputStream.bufferedReader().useLines { lines -> lines.forEach {
+            parseLine(it)
+        } }
+    }
+
+    private fun parseLine(line: String) {
+        val lineList = line.trim().split("\\s+".toRegex())
+        val lineNumber = lineList[0].toInt()
+
+        if(lineList.size < 2){
+            return
+        }
+
+        val lineWords = lineList.subList(1, lineList.size)
+        mLyrics.put(lineNumber, lineWords)
+    }
+
+    private fun onKmlDownload(bytes: ByteArray){
+        mLayer = KmlLayer(mMap, bytes.inputStream(), applicationContext)
+        mLayer.addLayerToMap()
+        val containers = mLayer.containers
+
+        mLayer.setOnFeatureClickListener({ feature ->
+                val wordCoord = feature.getProperty("name").split(":").map { it.toInt() }
+                val line = wordCoord[0]
+                val word = wordCoord[1] - 1
+
+            Log.i("KmlClick", "Feature clicked: " + feature.getProperty("name"))
+            println(mLyrics[line].toString())
+            println(mLyrics[line]?.get(word))
+
+        })
+    }
 
     /**
      * Invoked once GoogleApiClient is connected.

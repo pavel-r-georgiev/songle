@@ -1,16 +1,13 @@
 package me.pavelgeorgiev.songle
 
-import android.content.Context
 import android.os.AsyncTask
-import com.google.android.gms.maps.GoogleMap
-import com.google.maps.android.data.kml.KmlLayer
 import java.io.IOException
 import java.io.InputStream
 import java.net.URL
 import javax.net.ssl.HttpsURLConnection
 
 
-class DownloadKmlService(private val caller : DownloadKmlCallback) :
+class DownloadFileService(private val caller : DownloadFileCallback, private val fileType : String) :
         AsyncTask<String, Void, ByteArray>() {
 
     val READ_TIMEOUT = 1000
@@ -46,6 +43,6 @@ class DownloadKmlService(private val caller : DownloadKmlCallback) :
 
     override fun onPostExecute(result: ByteArray) {
         super.onPostExecute(result)
-        caller.downloadComplete(result)
+        caller.downloadComplete(result, fileType)
     }
 }
