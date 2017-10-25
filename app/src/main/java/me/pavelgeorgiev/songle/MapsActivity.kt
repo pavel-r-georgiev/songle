@@ -20,17 +20,12 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.location.LocationListener;
 import android.os.Build
-import android.os.Handler
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.view.Gravity
-import android.view.KeyEvent
-import android.widget.AdapterView
-import android.widget.ArrayAdapter
-import android.widget.ListView
-import android.widget.Toast
+import android.widget.*
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.data.kml.KmlLayer
 import org.xmlpull.v1.XmlPullParserException
@@ -56,10 +51,12 @@ class MapsActivity :
     private var mLyrics = HashMap<Int, List<String>>()
     private var mCurrLocationMarker: Marker? = null
     private lateinit var mDrawerList: ListView
-    private lateinit var mAdapter: ArrayAdapter<String>
+    private lateinit var mMenuAdapter: ArrayAdapter<String>
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var mDrawerToggle: ActionBarDrawerToggle
     private var mCollectedWords = HashMap<String, String>()
+    private lateinit var mWordsAdapter: WordAdapter
+    private lateinit var mWordsListView: ListView
 
     val MENU_ARRAY = arrayOf("Songs List", "Lyrics of current song")
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
@@ -79,11 +76,12 @@ class MapsActivity :
         mapFragment.getMapAsync(this)
 
         buildDrawerNav()
+        buildSlidingPanel()
         buildGoogleApiClient()
 
         mSongNumber = intent.getStringExtra("NUMBER")
-        onUiChange()
         var baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
+
         DownloadFileService(this, KML_TYPE).execute("$baseUrl/map5.kml")
         DownloadFileService(this, TXT_TYPE).execute("$baseUrl/words.txt")
     }
@@ -252,7 +250,7 @@ class MapsActivity :
         }
     }
 
-    
+
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION -> {
@@ -296,6 +294,9 @@ class MapsActivity :
         }
     }
 
+    /**
+     * Brings the activity back in immersive mode after key press or keyboard pop up
+     */
     private fun onUiChange() {
         val decorView = window.decorView
         decorView.setOnSystemUiVisibilityChangeListener { visibility ->
@@ -321,8 +322,8 @@ class MapsActivity :
     private fun buildDrawerNav() {
         mDrawerList = navList as ListView
 
-        mAdapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, MENU_ARRAY)
-        mDrawerList.adapter = mAdapter
+        mMenuAdapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, MENU_ARRAY)
+        mDrawerList.adapter = mMenuAdapter
         mDrawerLayout = drawer_layout
 
         mDrawerToggle = ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close)
@@ -334,6 +335,13 @@ class MapsActivity :
                 0 -> startActivity(Intent(this, MainActivity::class.java))
             }}
         )
+    }
+
+    private fun buildSlidingPanel() {
+        sliding_layout_header.text = "${mCollectedWords.size} words collected"
+        mWordsAdapter = WordAdapter(mCollectedWords, this)
+        mWordsListView = lyrics_word_list
+        mWordsListView.adapter = mWordsAdapter
     }
 
     private fun toggleMenu(view: View) {
@@ -350,8 +358,9 @@ class MapsActivity :
          }
 
          mCollectedWords.put(word, location)
-         println(mCollectedWords.toString())
-    }
+         sliding_layout_header.text = "${mCollectedWords.size} words collected"
+         mWordsAdapter.notifyDataSetChanged()
+     }
 
     override fun onConnectionSuspended(flag : Int) {
         println(">>>> Connection to Google APIs suspended. $TAG [onConnectionSuspended")

@@ -5,4 +5,8 @@
     <string name="maps_base_url"> https://www.inf.ed.ac.uk/teaching/courses/cslp/data/songs/</string>
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
+    <string name="song_name_input_text">Song name</string>
+    <string name="collected_lyrics">Collected lyrics</string>
+    <string name="word">Word</string>
+    <string name="location">Location</string>
 </resources>
