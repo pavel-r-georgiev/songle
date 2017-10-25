@@ -187,6 +187,9 @@ class MapsActivity :
         val containers = mLayer.containers
 
         mLayer.setOnFeatureClickListener({ feature ->
+            if(feature == null){
+                return@setOnFeatureClickListener
+            }
             val wordCoord = feature.getProperty("name").split(":").map { it.toInt() }
             val line = wordCoord[0]
             val word = wordCoord[1] - 1
