@@ -20,11 +20,13 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.location.LocationListener;
 import android.os.Build
+import android.os.Handler
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.view.Gravity
+import android.view.KeyEvent
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.ListView
@@ -57,6 +59,7 @@ class MapsActivity :
     private lateinit var mAdapter: ArrayAdapter<String>
     private lateinit var mDrawerLayout: DrawerLayout
     private lateinit var mDrawerToggle: ActionBarDrawerToggle
+    private var mCollectedWords = HashMap<String, String>()
 
     val MENU_ARRAY = arrayOf("Songs List", "Lyrics of current song")
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
@@ -79,7 +82,7 @@ class MapsActivity :
         buildGoogleApiClient()
 
         mSongNumber = intent.getStringExtra("NUMBER")
-
+        onUiChange()
         var baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
         DownloadFileService(this, KML_TYPE).execute("$baseUrl/map5.kml")
         DownloadFileService(this, TXT_TYPE).execute("$baseUrl/words.txt")
@@ -91,6 +94,10 @@ class MapsActivity :
         mGoogleApiClient.connect()
     }
 
+    override fun onResume() {
+        super.onResume()
+        onUiChange()
+    }
     override fun onStop() {
         super.onStop()
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected) {
@@ -187,9 +194,8 @@ class MapsActivity :
             val word = wordCoord[1] - 1
 
             Log.i("KmlClick", "Feature clicked: " + feature.getProperty("name"))
-            println(mLyrics[line].toString())
-            println(mLyrics[line]?.get(word))
-//            addWord(mLyrics[line]?.get(word)
+
+            collectWord(mLyrics[line]?.get(word), feature.getProperty("name"))
         })
     }
 
@@ -246,7 +252,7 @@ class MapsActivity :
         }
     }
 
-
+    
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION -> {
@@ -290,6 +296,19 @@ class MapsActivity :
         }
     }
 
+    private fun onUiChange() {
+        val decorView = window.decorView
+        decorView.setOnSystemUiVisibilityChangeListener { visibility ->
+            if (visibility and View.SYSTEM_UI_FLAG_FULLSCREEN == 0) {
+                decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY)
+            }
+        }
+    }
 
     private fun buildGoogleApiClient() {
         mGoogleApiClient = GoogleApiClient.Builder(this)
@@ -325,10 +344,13 @@ class MapsActivity :
         }
     }
 
-     fun onItemClick(parent: AdapterView<*>, view: View, position: Int, id: Long) {
-        when(position){
-            0 -> startActivity(Intent(this, MainActivity::class.java))
-        }
+     private fun collectWord(word: String?, location: String) {
+         if(word == null){
+             return
+         }
+
+         mCollectedWords.put(word, location)
+         println(mCollectedWords.toString())
     }
 
     override fun onConnectionSuspended(flag : Int) {
