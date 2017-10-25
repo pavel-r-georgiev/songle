@@ -46,7 +46,7 @@ class MapsActivity :
     private lateinit var mGoogleApiClient: GoogleApiClient
     private lateinit var mLocationRequest: LocationRequest
     private lateinit var mLastLocation: Location
-    private lateinit var mLayer: KmlLayer
+    private var mLayer: KmlLayer? = null
     private lateinit var mSongNumber: String
     private var mLyrics = HashMap<Int, List<String>>()
     private var mCurrLocationMarker: Marker? = null
@@ -58,7 +58,7 @@ class MapsActivity :
     private lateinit var mWordsAdapter: WordAdapter
     private lateinit var mWordsListView: ListView
 
-    val MENU_ARRAY = arrayOf("Songs List", "Lyrics of current song")
+    val MENU_ARRAY = arrayOf("All Songs")
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
     val TAG = "MapsActivity"
     val LOCATION_REQUEST_INTERVAL: Long = 5000
@@ -107,11 +107,11 @@ class MapsActivity :
         super.onPause()
 
 //        Stop location updates when Activity is not active
-        if (mGoogleApiClient != null) {
+        if (mGoogleApiClient != null && mGoogleApiClient.isConnected) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
 
-        mLayer.removeLayerFromMap()
+        mLayer?.removeLayerFromMap()
     }
 
 
@@ -183,10 +183,11 @@ class MapsActivity :
 
     private fun onKmlDownload(bytes: ByteArray) {
         mLayer = KmlLayer(mMap, bytes.inputStream(), applicationContext)
-        mLayer.addLayerToMap()
-        val containers = mLayer.containers
 
-        mLayer.setOnFeatureClickListener({ feature ->
+        mLayer?.addLayerToMap()
+        val containers = mLayer?.containers
+
+        mLayer?.setOnFeatureClickListener({ feature ->
             if(feature == null){
                 return@setOnFeatureClickListener
             }
@@ -341,7 +342,7 @@ class MapsActivity :
     }
 
     private fun buildSlidingPanel() {
-        sliding_layout_header.text = "${mCollectedWords.size} words collected"
+        sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
         mWordsAdapter = WordAdapter(mCollectedWords, this)
         mWordsListView = lyrics_word_list
         mWordsListView.adapter = mWordsAdapter
@@ -361,9 +362,14 @@ class MapsActivity :
          }
 
          mCollectedWords.put(word, location)
-         sliding_layout_header.text = "${mCollectedWords.size} words collected"
+         sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
          mWordsAdapter.notifyDataSetChanged()
      }
+
+    private fun buildWordsCollectedString(size: Int) : String{
+        val word = if(size == 1) "word" else "words"
+        return "$size $word collected"
+    }
 
     override fun onConnectionSuspended(flag : Int) {
         println(">>>> Connection to Google APIs suspended. $TAG [onConnectionSuspended")

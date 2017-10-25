@@ -6,15 +6,17 @@
 
     <TextView
         android:id="@+id/lyrics_word"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|start"
-        android:layout_margin="24dp" />
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_gravity="center_vertical|left"
+        android:layout_margin="24dp"
+        android:layout_weight="1" />
 
     <TextView
         android:id="@+id/lyrics_word_location"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical|end"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:layout_gravity="center_vertical|right"
         android:layout_margin="24dp" />
 </LinearLayout>
