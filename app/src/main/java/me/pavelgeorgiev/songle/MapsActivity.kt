@@ -195,8 +195,8 @@ class MapsActivity :
             val word = wordCoord[1] - 1
 
             Log.i("KmlClick", "Feature clicked: " + feature.getProperty("name"))
-
-            collectWord(mLyrics[line]?.get(word), feature.getProperty("name"))
+            val location = "Line: $line, position: ${wordCoord[1]}"
+            collectWord(mLyrics[line]?.get(word), location)
         })
     }
 
