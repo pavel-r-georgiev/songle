@@ -10,4 +10,10 @@
     <string name="word">Word</string>
     <string name="location">Location</string>
     <string name="choose_difficulty">Please choose difficulty</string>
+    <string name="difficulty_easy">Easy</string>
+    <string name="difficulty_medium">Medium</string>
+    <string name="difficulty_hard">Hard</string>
+    <string name="difficulty_very_hard">Very Hard</string>
+    <string name="difficulty_impossible">Impossible</string>
+
 </resources>

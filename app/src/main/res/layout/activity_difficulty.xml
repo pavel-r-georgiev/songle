@@ -11,19 +11,209 @@
     <TextView
         android:id="@+id/difficulty_header"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginTop="64dp"
+        android:layout_height="64dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="24dp"
         android:gravity="center_vertical|center_horizontal|center"
         android:text="@string/choose_difficulty"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayoutEasy"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.0" />
 
+    <!--EASY-->
     <LinearLayout
+        android:id="@+id/linearLayoutEasy"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="58dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/border"
         android:orientation="horizontal"
-        tools:layout_editor_absoluteX="8dp"
-        tools:layout_editor_absoluteY="124dp"></LinearLayout>
+        app:layout_constraintBottom_toTopOf="@+id/linearLayoutMedium"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/difficulty_header">
+
+        <ImageView
+            android:layout_width="51dp"
+            android:layout_height="match_parent"
+            app:srcCompat="@drawable/ic_sentiment_very_satisfied_black_24dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:orientation="vertical"
+            android:padding="6dp">
+
+            <TextView
+                android:id="@+id/difficulty_easy"
+                android:layout_width="match_parent"
+                android:layout_height="29dp"
+                android:text="@string/difficulty_easy" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="61dp"
+                android:text="Every word is displayed" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!--MEDIUM-->
+    <LinearLayout
+        android:id="@+id/linearLayoutMedium"
+        android:layout_width="match_parent"
+        android:layout_height="62dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/border"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayoutHard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayoutEasy"
+        app:layout_constraintVertical_bias="1.0">
+
+        <ImageView
+            android:layout_width="51dp"
+            android:layout_height="match_parent"
+            app:srcCompat="@drawable/ic_sentiment_satisfied_black_24dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:orientation="vertical"
+            android:padding="6dp">
+
+            <TextView
+                android:id="@+id/difficulty_medium"
+                android:layout_width="match_parent"
+                android:layout_height="29dp"
+                android:text="@string/difficulty_medium" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="61dp"
+                android:text="Every word is displayed" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!--HARD-->
+    <LinearLayout
+        android:id="@+id/linearLayoutHard"
+        android:layout_width="match_parent"
+        android:layout_height="62dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/border"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayoutVeryHard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayoutMedium">
+
+        <ImageView
+            android:layout_width="51dp"
+            android:layout_height="match_parent"
+            app:srcCompat="@drawable/ic_sentiment_neutral_black_24dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:orientation="vertical"
+            android:padding="6dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="29dp"
+                android:text="@string/difficulty_hard" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="61dp"
+                android:text="Every word is displayed" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!--VERY HARD-->
+    <LinearLayout
+        android:id="@+id/linearLayoutVeryHard"
+        android:layout_width="match_parent"
+        android:layout_height="62dp"
+        android:layout_marginBottom="16dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:background="@drawable/border"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toTopOf="@+id/linearLayoutImpossible"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayoutHard">
+
+        <ImageView
+            android:layout_width="51dp"
+            android:layout_height="match_parent"
+            app:srcCompat="@drawable/ic_sentiment_dissatisfied_black_24dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:orientation="vertical"
+            android:padding="6dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="29dp"
+                android:text="@string/difficulty_very_hard" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="61dp"
+                android:text="Every word is displayed" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!--IMPOSSIBLE-->
+    <LinearLayout
+        android:id="@+id/linearLayoutImpossible"
+        android:layout_width="match_parent"
+        android:layout_height="62dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/border"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayoutVeryHard">
+
+        <ImageView
+            android:layout_width="51dp"
+            android:layout_height="match_parent"
+            app:srcCompat="@drawable/ic_sentiment_very_dissatisfied_black_24dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="88dp"
+            android:orientation="vertical"
+            android:padding="6dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="29dp"
+                android:text="@string/difficulty_impossible" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="61dp"
+                android:text="Every word is displayed" />
+        </LinearLayout>
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>
 
