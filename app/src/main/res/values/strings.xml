@@ -9,4 +9,5 @@
     <string name="collected_lyrics">Collected lyrics</string>
     <string name="word">Word</string>
     <string name="location">Location</string>
+    <string name="choose_difficulty">Please choose difficulty</string>
 </resources>
