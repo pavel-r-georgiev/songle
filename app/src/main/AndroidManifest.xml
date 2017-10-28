@@ -42,7 +42,13 @@
 
         <activity
             android:name=".MapsActivity"
-            android:label="@string/title_activity_maps"></activity>
+            android:label="@string/title_activity_maps"
+            android:screenOrientation="portrait">
+        </activity>
+        <activity
+            android:name=".DifficultyActivity"
+            android:label="@string/title_difficulty_activity">
+        </activity>
     </application>
 
 </manifest>

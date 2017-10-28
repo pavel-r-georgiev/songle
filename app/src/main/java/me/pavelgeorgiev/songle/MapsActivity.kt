@@ -48,6 +48,7 @@ class MapsActivity :
     private lateinit var mLastLocation: Location
     private var mLayer: KmlLayer? = null
     private lateinit var mSongNumber: String
+    private lateinit var mSongMapVersion: String
     private var mLyrics = HashMap<Int, List<String>>()
     private var mCurrLocationMarker: Marker? = null
     private lateinit var mDrawerList: ListView
@@ -79,10 +80,12 @@ class MapsActivity :
         buildSlidingPanel()
         buildGoogleApiClient()
 
-        mSongNumber = intent.getStringExtra("NUMBER")
-        var baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
-
-        DownloadFileService(this, KML_TYPE).execute("$baseUrl/map5.kml")
+        mSongNumber = intent.getStringExtra(getString(R.string.intent_song_number))
+        mSongMapVersion = intent.getStringExtra(getString(R.string.intent_song_map_version))
+        val baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
+        val mapVersion = "map$mSongMapVersion.kml"
+        println(mapVersion)
+        DownloadFileService(this, KML_TYPE).execute("$baseUrl/$mapVersion")
         DownloadFileService(this, TXT_TYPE).execute("$baseUrl/words.txt")
     }
 

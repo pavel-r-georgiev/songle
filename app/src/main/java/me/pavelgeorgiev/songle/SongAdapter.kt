@@ -1,5 +1,6 @@
 package me.pavelgeorgiev.songle
 
+import android.content.Context
 import android.content.Intent
 import android.support.v7.widget.RecyclerView
 import android.text.Layout
@@ -11,7 +12,7 @@ import kotlinx.android.synthetic.main.song_list_item.view.*
 import java.util.*
 
 
-class SongAdapter (private val songs: List<Song>)
+class SongAdapter (private val songs: List<Song>, private val context: Context)
 
     : RecyclerView.Adapter<SongAdapter.ViewHolder>() {
     override fun getItemCount() = songs.size
@@ -25,14 +26,14 @@ class SongAdapter (private val songs: List<Song>)
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         val song = songs[position]
 //     Create intent to go to Map activity
-        val intent = Intent(holder.cv.context, MapsActivity::class.java)
+        val intent = Intent(holder.cv.context, DifficultyActivity::class.java)
 //     Put number of song. Used to load corresponding words on map
-        intent.putExtra("NUMBER", song.number)
+        intent.putExtra(context.getString(R.string.intent_song_number), song.number)
 
 
         holder.artist.text = song.artist
-        holder.title.text = if(Math.random() > 0.5) song.title else "Unknown"
-//        holder.link.text = song.link
+        holder.title.text = if(Math.random() > 0.5) song.title else context.getString(R.string.unknown)
+        holder.link.text = if(holder.title.text != context.getString(R.string.unknown)) song.link else ""
 
         holder.cv.setOnClickListener({ holder.cv.context.startActivity(intent) })
     }

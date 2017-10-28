@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity(), DownloadXmlCallback {
 
         mLayoutManager = LinearLayoutManager(this)
         mRecyclerView.layoutManager = mLayoutManager
-        mAdapter = SongAdapter(mSongs)
+        mAdapter = SongAdapter(mSongs, this)
         mRecyclerView.adapter = mAdapter
 
         if (isNetworkConnected()) {
@@ -67,11 +67,6 @@ class MainActivity : AppCompatActivity(), DownloadXmlCallback {
 
     private fun getSongs() {
         DownloadXmlService(this).execute(getString(R.string.songs_xml_url))
-    }
-
-    fun onMapSelect(number : String){
-        val intent = Intent(mContext, MapsActivity::class.java)
-        startActivity(intent)
     }
 
     override fun downloadComplete(result: List<Song>) {
