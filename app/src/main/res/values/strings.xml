@@ -20,4 +20,30 @@
     <string name="intent_song_map_version">MAP_VERSION</string>
     <string name="unknown">Unknown</string>
     <string name="difficulty_easy_description">All words are visible on the map</string>
+    <string name="title_activity_login">Sign in</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password (optional)</string>
+    <string name="action_sign_in">Sign in or register</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email
+        completions."
+    </string>
+    <string name="sign_out">Sign out</string>
+    <string name="verify_email">Verify e-mail</string>
+    <string name="create_account">Create account</string>
+    <string name="sign_in">Sign in</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_email">E-mail</string>
+    <string name="signed_out">Signed out</string>
+    <string name="login_status_fmt">Email User: %1$s (verified: %2$b)</string>
+    <string name="user_status_fmt">User: %s</string>
+    <string name="desc_songle">Songle</string>
+    <string name="login_title_text">Welcome to Songle.</string>
+    <string name="auth_failed">Authentication failed</string>
 </resources>
