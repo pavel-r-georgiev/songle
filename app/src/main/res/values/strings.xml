@@ -40,10 +40,14 @@
     <string name="sign_in">Sign in</string>
     <string name="hint_password">Password</string>
     <string name="hint_email">E-mail</string>
-    <string name="signed_out">Signed out</string>
+    <string name="signed_out">Please sign in</string>
+    <string name="login_anonymously">or login anonymously.</string>
     <string name="login_status_fmt">Email User: %1$s (verified: %2$b)</string>
     <string name="user_status_fmt">User: %s</string>
     <string name="desc_songle">Songle</string>
     <string name="login_title_text">Welcome to Songle.</string>
     <string name="auth_failed">Authentication failed</string>
+    <string name="dialog_login_disclaimer">No progress will be saved. To enable progress synchronization you should log in now or later within the app.</string>
+    <string name="continue_button">CONTINUE</string>
+    <string name="cancel_button">CANCEL</string>
 </resources>

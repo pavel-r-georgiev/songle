@@ -16,11 +16,16 @@ import com.google.firebase.auth.AuthResult
 import com.google.android.gms.tasks.Task
 import android.support.annotation.NonNull
 import android.support.v4.app.FragmentActivity
+import android.text.SpannableString
 import android.util.Log
 import com.google.android.gms.tasks.OnCompleteListener
 import android.text.TextUtils
+import android.text.style.UnderlineSpan
 import android.view.inputmethod.InputMethodManager
 import android.widget.ProgressBar
+import android.content.DialogInterface
+import android.content.DialogInterface.BUTTON_NEUTRAL
+import android.support.v7.app.AlertDialog
 
 
 /**
@@ -54,6 +59,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         email_sign_in_button.setOnClickListener(this)
         email_create_account_button.setOnClickListener(this)
         sign_out_button.setOnClickListener(this)
+        mDetailTextView.setOnClickListener(this)
 
         mAuth = FirebaseAuth.getInstance()
 
@@ -135,6 +141,43 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                 }
     }
 
+    private fun preAnonymousLogin() {
+        val alertDialog = AlertDialog.Builder(this@LoginActivity).create()
+        alertDialog.setTitle("Saved progress")
+        alertDialog.setMessage(getString(R.string.dialog_login_disclaimer))
+        
+        alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.cancel_button),
+                { dialog, _ ->
+                    dialog.dismiss()
+                })
+
+        alertDialog.setButton(AlertDialog.BUTTON_POSITIVE, getText(R.string.continue_button),
+                { dialog, _ ->
+                    dialog.dismiss()
+                    signInAnonymously()
+                })
+        alertDialog.show()
+    }
+
+    private fun signInAnonymously() {
+        Log.d(TAG, "signInAnonymously")
+        mAuth.signInAnonymously()
+                .addOnCompleteListener(this) { task ->
+                    if (task.isSuccessful) {
+                        // Sign in success, update UI with the signed-in user's information
+                        Log.d(TAG, "signInAnonymously:success")
+                        val user = mAuth.currentUser
+                        updateUI(user)
+                    } else {
+                        // If sign in fails, display a message to the user.
+                        Log.w(TAG, "signInAnonymously:failure", task.exception)
+                        Toast.makeText(this@LoginActivity, "Authentication failed.",
+                                Toast.LENGTH_SHORT).show()
+                        updateUI(null)
+                    }
+                }
+    }
+
     private fun signOut() {
         mAuth.signOut()
         updateUI(null)
@@ -147,11 +190,11 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         val email = mEmailField.text.toString()
         when {
             TextUtils.isEmpty(email) -> {
-                mEmailField.error = "Required."
+                mEmailField.error = getString(R.string.error_field_required)
                 valid = false
             }
             !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches() -> {
-                mEmailField.error = "Email is invalid."
+                mEmailField.error = getString(R.string.error_invalid_email)
                 valid = false
             }
             else -> mEmailField.error = null
@@ -160,11 +203,11 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         val password = mPasswordField.text.toString()
         when {
             TextUtils.isEmpty(password) -> {
-                mPasswordField.error = "Required."
+                mPasswordField.error = getString(R.string.error_field_required)
                 valid = false
             }
             password.length < 6 -> {
-                mPasswordField.error = "Password should be at least 6 characters."
+                mPasswordField.error = getString(R.string.error_invalid_password)
                 valid = false
             }
             else -> mPasswordField.error = null
@@ -174,7 +217,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     }
 
 
-    fun hideSoftKeyboard(view: View) {
+    private fun hideSoftKeyboard(view: View) {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
@@ -184,16 +227,21 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         if (user != null) {
             mStatusTextView.text = getString(R.string.login_status_fmt,
                     user.email, user.isEmailVerified)
-            mDetailTextView.text = getString(R.string.user_status_fmt, user.uid)
 
-             email_password_buttons.visibility = View.GONE
+            email_password_buttons.visibility = View.GONE
             email_password_fields.visibility = View.GONE
             signed_in_buttons.visibility = View.VISIBLE
+            mDetailTextView.visibility = View.GONE
             hideSoftKeyboard(mStatusTextView)
 
         } else {
-            mStatusTextView.setText(R.string.signed_out)
-            mDetailTextView.text = null
+            mStatusTextView.text = getString(R.string.signed_out)
+
+            val detailText = SpannableString(getString(R.string.login_anonymously))
+            detailText.setSpan(UnderlineSpan(), 0 , detailText.length, 0)
+            mDetailTextView.visibility = View.VISIBLE
+            mDetailTextView.text =  detailText
+
 
             email_password_buttons.visibility = View.VISIBLE
             email_password_fields.visibility = View.VISIBLE
@@ -206,6 +254,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         when (i) {
             R.id.email_create_account_button -> createAccount(mEmailField.text.toString(), mPasswordField.text.toString())
             R.id.email_sign_in_button -> signIn(mEmailField.text.toString(), mPasswordField.text.toString())
+            R.id.detail -> preAnonymousLogin()
             R.id.sign_out_button -> signOut()
         }
     }
