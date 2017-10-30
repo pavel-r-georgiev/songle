@@ -1,8 +1,10 @@
 package me.pavelgeorgiev.songle
 
 import android.Manifest
+import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.location.Location
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -23,11 +25,18 @@ import android.os.Build
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog
+import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.Gravity
+import android.view.Window
+import android.view.WindowManager
 import android.widget.*
 import com.google.android.gms.maps.model.*
 import com.google.maps.android.data.kml.KmlLayer
+import com.mikepenz.materialdrawer.Drawer
+import com.mikepenz.materialdrawer.DrawerBuilder
+import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
+import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import kotlinx.android.synthetic.main.activity_maps.*
@@ -51,15 +60,11 @@ class MapsActivity :
     private lateinit var mSongMapVersion: String
     private var mLyrics = HashMap<Int, List<String>>()
     private var mCurrLocationMarker: Marker? = null
-    private lateinit var mDrawerList: ListView
-    private lateinit var mMenuAdapter: ArrayAdapter<String>
-    private lateinit var mDrawerLayout: DrawerLayout
-    private lateinit var mDrawerToggle: ActionBarDrawerToggle
+    private lateinit var mDrawer: Drawer
     private var mCollectedWords = HashMap<String, String>()
     private lateinit var mWordsAdapter: WordAdapter
     private lateinit var mWordsListView: ListView
 
-    val MENU_ARRAY = arrayOf("All Songs")
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
     val TAG = "MapsActivity"
     val LOCATION_REQUEST_INTERVAL: Long = 5000
@@ -327,22 +332,64 @@ class MapsActivity :
     }
 
     private fun buildDrawerNav() {
-        mDrawerList = navList as ListView
+        val item1 = PrimaryDrawerItem().
+                withIdentifier(1)
+                .withName("Songs")
+                .withIcon(R.drawable.ic_music_note_black_24dp)
 
-        mMenuAdapter = ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, MENU_ARRAY)
-        mDrawerList.adapter = mMenuAdapter
-        mDrawerLayout = drawer_layout
 
-        mDrawerToggle = ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_open, R.string.drawer_close)
-        mDrawerLayout.addDrawerListener(mDrawerToggle)
-        mapMenuButton.setOnClickListener({ toggleMenu(it) })
+        mDrawer = DrawerBuilder()
+                .withActivity(this)
+                .addDrawerItems(
+                        item1
+                )
+                .withFullscreen(true)
+                .withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener{ _, position, _ ->
+                        when(position) {
+                            0 -> run {
+                                startActivity(Intent(this, MainActivity::class.java))
+                                return@OnDrawerItemClickListener true
+                            }
+                            else -> {
+                                return@OnDrawerItemClickListener false
+                            }
+                        }
+                    }).build()
 
-        mDrawerList.setOnItemClickListener({ _: AdapterView<*>, _: View, position: Int, _: Long ->
-            when(position) {
-                0 -> startActivity(Intent(this, MainActivity::class.java))
-            }}
-        )
+
+
+        //USE THIS CODE TO GET A FULL TRANSPARENT STATUS BAR
+        //YOU HAVE TO UNCOMMENT THE setWindowFlag too.
+        if (Build.VERSION.SDK_INT in 19..20) {
+            setWindowFlag(this, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, true)
+        }
+        if (Build.VERSION.SDK_INT >= 19) {
+            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+        }
+        if (Build.VERSION.SDK_INT >= 21) {
+            setWindowFlag(this, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, false)
+            window.statusBarColor = Color.TRANSPARENT
+        }
+
+
+        if (Build.VERSION.SDK_INT >= 19) {
+            mDrawer.drawerLayout.fitsSystemWindows = false;
+        }
+        mapMenuButton.setOnClickListener({toggleMenu(it)})
     }
+
+
+    fun setWindowFlag(activity: Activity, bits: Int, on: Boolean) {
+        val win = activity.window;
+        val winParams = win.attributes;
+        if (on) {
+            winParams.flags = winParams.flags or bits
+        } else {
+            winParams.flags = winParams.flags and bits.inv()
+        }
+        win.attributes = winParams;
+    }
+
 
     private fun buildSlidingPanel() {
         sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
@@ -352,10 +399,10 @@ class MapsActivity :
     }
 
     private fun toggleMenu(view: View) {
-        if (mDrawerLayout.isDrawerOpen(Gravity.LEFT)) {
-            mDrawerLayout.closeDrawer(Gravity.LEFT);
+        if (mDrawer.drawerLayout.isDrawerOpen(Gravity.LEFT)) {
+            mDrawer.closeDrawer()
         } else {
-            mDrawerLayout.openDrawer(Gravity.LEFT);
+            mDrawer.openDrawer()
         }
     }
 

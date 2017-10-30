@@ -44,6 +44,10 @@ dependencies {
     compile 'com.google.maps.android:android-maps-utils:0.5+'
     compile 'com.sothree.slidinguppanel:library:3.4.0'
     implementation 'com.android.support:design:26.1.0'
+    compile('com.mikepenz:materialdrawer:5.9.5@aar') {
+        transitive = true
+        exclude group: 'com.android.support'
+    }
 }
 
 
