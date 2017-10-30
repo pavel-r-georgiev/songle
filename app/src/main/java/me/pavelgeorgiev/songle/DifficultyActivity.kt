@@ -36,31 +36,31 @@ class DifficultyActivity : AppCompatActivity(){
                 getString(R.string.difficulty_easy),
                 getString(R.string.difficulty_easy_description),
                 EASY,
-                R.drawable.ic_sentiment_very_satisfied_black_24dp, songNumber)
+                R.drawable.easy, songNumber)
 
         val medium = Difficulty(
                 getString(R.string.difficulty_medium),
-                getString(R.string.difficulty_easy_description),
+                getString(R.string.difficulty_medium_description),
                 MEDIUM,
-                R.drawable.ic_sentiment_satisfied_black_24dp, songNumber)
+                R.drawable.medium, songNumber)
 
         val hard = Difficulty(
                 getString(R.string.difficulty_hard),
-                getString(R.string.difficulty_easy_description),
+                getString(R.string.difficulty_hard_description),
                 HARD,
-                R.drawable.ic_sentiment_neutral_black_24dp, songNumber)
+                R.drawable.hard, songNumber)
 
         val veryHard = Difficulty(
                 getString(R.string.difficulty_very_hard),
-                getString(R.string.difficulty_easy_description),
+                getString(R.string.difficulty_very_hard_description),
                 VERY_HARD,
-                R.drawable.ic_sentiment_dissatisfied_black_24dp, songNumber)
+                R.drawable.very_hard, songNumber)
 
         val impossible = Difficulty(
                 getString(R.string.difficulty_impossible),
-                getString(R.string.difficulty_easy_description),
+                getString(R.string.difficulty_impossible_description),
                 IMPOSSIBLE,
-                R.drawable.ic_sentiment_very_dissatisfied_black_24dp, songNumber)
+                R.drawable.impossible, songNumber)
 
         return listOf(easy, medium, hard, veryHard, impossible)
     }

@@ -1,35 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent"
+    android:orientation="vertical">
 
     <TextView
         android:id="@+id/difficulty_header"
         android:layout_width="match_parent"
-        android:layout_height="80dp"
-        android:layout_marginBottom="8dp"
+        android:layout_height="wrap_content"
+        android:padding="24dp"
         android:gravity="center_vertical|center_horizontal|center"
-        android:text="@string/choose_difficulty"
-        app:layout_constraintBottom_toTopOf="@+id/difficulties_list"/>
+        android:text="@string/choose_difficulty" />
 
     <ListView
         android:id="@+id/difficulties_list"
-        android:layout_width="352dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="8dp"
         android:layout_marginEnd="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
         android:divider="@android:color/transparent"
-        android:dividerHeight="15.0sp"
-        app:layout_constraintTop_toBottomOf="@+id/difficulty_header"
-        tools:layout_editor_absoluteY="80dp"
-        />
+        android:dividerHeight="15.0sp" />
     />
 
-</android.support.constraint.ConstraintLayout>
+</LinearLayout>
 

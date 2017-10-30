@@ -19,7 +19,11 @@
     <string name="intent_song_number">SONG</string>
     <string name="intent_song_map_version">MAP_VERSION</string>
     <string name="unknown">Unknown</string>
-    <string name="difficulty_easy_description">All words are visible on the map</string>
+    <string name="difficulty_easy_description">All words are visible on the map.</string>
+    <string name="difficulty_medium_description">The very interesting words are hidden from the map.</string>
+    <string name="difficulty_hard_description">75% of the words are visible on the map.</string>
+    <string name="difficulty_very_hard_description">50% of the words are visible on the map.</string>
+    <string name="difficulty_impossible_description">25% of the words are visible on the map.</string>
     <string name="title_activity_login">Sign in</string>
 
     <!-- Strings related to login -->

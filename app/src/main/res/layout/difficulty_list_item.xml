@@ -1,34 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/difficulty_list_item"
     android:layout_width="match_parent"
-    android:layout_height="62dp"
+    android:layout_height="wrap_content"
     android:layout_marginTop="8dp"
-    android:orientation="horizontal"
-    android:elevation="2dp"
     android:background="@drawable/box_shadow"
-    android:clickable="true" >
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="horizontal"
+    android:weightSum="3.0">
 
     <ImageView
         android:id="@+id/difficulty_icon"
-        android:layout_width="51dp"
-        android:layout_height="match_parent" />
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.7"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY" />
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="88dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2.3"
         android:orientation="vertical"
-        android:padding="6dp">
+        android:layout_gravity="center"
+        android:padding="18dp">
 
-    <TextView
-        android:id="@+id/difficulty_title"
-        android:layout_width="match_parent"
-        android:layout_height="29dp" />
+        <TextView
+            android:id="@+id/difficulty_title"
+            android:textSize="@dimen/title_text_size"
+            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
 
-    <TextView
-        android:id="@+id/difficulty_description"
-        android:layout_width="match_parent"
-        android:layout_height="61dp" />
+        <TextView
+            android:id="@+id/difficulty_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 </LinearLayout>

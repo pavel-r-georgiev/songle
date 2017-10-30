@@ -404,7 +404,7 @@ class MapsActivity :
         mCurrLocationMarker = mMap.addMarker(markerOptions)
 
         //Move map camera
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 18F));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17.5F));
     }
 
 }

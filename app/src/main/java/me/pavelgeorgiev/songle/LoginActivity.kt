@@ -2,6 +2,7 @@ package me.pavelgeorgiev.songle
 
 
 import android.content.Context
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.view.View
@@ -12,19 +13,12 @@ import com.google.firebase.auth.FirebaseAuth
 import kotlinx.android.synthetic.main.activity_login.*
 import com.google.firebase.auth.FirebaseUser
 import android.widget.Toast
-import com.google.firebase.auth.AuthResult
-import com.google.android.gms.tasks.Task
-import android.support.annotation.NonNull
-import android.support.v4.app.FragmentActivity
 import android.text.SpannableString
 import android.util.Log
-import com.google.android.gms.tasks.OnCompleteListener
 import android.text.TextUtils
 import android.text.style.UnderlineSpan
 import android.view.inputmethod.InputMethodManager
 import android.widget.ProgressBar
-import android.content.DialogInterface
-import android.content.DialogInterface.BUTTON_NEUTRAL
 import android.support.v7.app.AlertDialog
 
 
@@ -145,7 +139,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         val alertDialog = AlertDialog.Builder(this@LoginActivity).create()
         alertDialog.setTitle("Saved progress")
         alertDialog.setMessage(getString(R.string.dialog_login_disclaimer))
-        
+
         alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, getText(R.string.cancel_button),
                 { dialog, _ ->
                     dialog.dismiss()
@@ -233,7 +227,9 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
             signed_in_buttons.visibility = View.VISIBLE
             mDetailTextView.visibility = View.GONE
             hideSoftKeyboard(mStatusTextView)
-
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+            finish()
         } else {
             mStatusTextView.text = getString(R.string.signed_out)
 
