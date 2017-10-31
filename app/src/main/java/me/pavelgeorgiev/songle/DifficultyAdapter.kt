@@ -33,15 +33,16 @@ class DifficultyAdapter(context: Context, resource: Int, private val difficultie
         vh.description.text = difficulty.description
         vh.icon.setImageResource(difficulty.iconResource)
 
-        vh.layout.setOnClickListener({onDifficultyClick(difficulty.mapVersion, difficulty.songNumber)})
+        vh.layout.setOnClickListener({onDifficultyClick(difficulty.mapVersion, difficulty.songNumber, difficulty.songTitle)})
 
         return view
     }
 
-    private fun onDifficultyClick(mapVersion: String, songNumber: String){
+    private fun onDifficultyClick(mapVersion: String, songNumber: String, songTitle: String){
         val intent = Intent(context, MapsActivity::class.java)
         intent.putExtra(context.getString(R.string.intent_song_map_version), mapVersion)
         intent.putExtra(context.getString(R.string.intent_song_number), songNumber)
+        intent.putExtra(context.getString(R.string.intent_song_title), songTitle)
         context.startActivity(intent)
     }
 

@@ -2,6 +2,7 @@ package me.pavelgeorgiev.songle
 
 import android.Manifest
 import android.app.Activity
+import android.app.Dialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -22,21 +23,21 @@ import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.location.LocationListener;
 import android.os.Build
-import android.support.v4.widget.DrawerLayout
-import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog
-import android.support.v7.widget.RecyclerView
 import android.util.Log
 import android.view.Gravity
-import android.view.Window
 import android.view.WindowManager
+import android.view.inputmethod.EditorInfo
 import android.widget.*
 import com.google.android.gms.maps.model.*
+import com.google.firebase.auth.FirebaseAuth
+import com.google.maps.android.data.Feature
 import com.google.maps.android.data.kml.KmlLayer
+import com.mikepenz.materialdrawer.AccountHeaderBuilder
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.DrawerBuilder
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
-import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem
+import com.mikepenz.materialdrawer.model.ProfileDrawerItem
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import kotlinx.android.synthetic.main.activity_maps.*
@@ -57,6 +58,7 @@ class MapsActivity :
     private lateinit var mLastLocation: Location
     private var mLayer: KmlLayer? = null
     private lateinit var mSongNumber: String
+    private lateinit var mSongTitle: String
     private lateinit var mSongMapVersion: String
     private var mLyrics = HashMap<Int, List<String>>()
     private var mCurrLocationMarker: Marker? = null
@@ -86,10 +88,12 @@ class MapsActivity :
         buildGoogleApiClient()
 
         mSongNumber = intent.getStringExtra(getString(R.string.intent_song_number))
+        mSongTitle = intent.getStringExtra(getString(R.string.intent_song_title))
         mSongMapVersion = intent.getStringExtra(getString(R.string.intent_song_map_version))
+
         val baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
         val mapVersion = "map$mSongMapVersion.kml"
-        println(mapVersion)
+
         DownloadFileService(this, KML_TYPE).execute("$baseUrl/$mapVersion")
         DownloadFileService(this, TXT_TYPE).execute("$baseUrl/words.txt")
     }
@@ -195,18 +199,20 @@ class MapsActivity :
         mLayer?.addLayerToMap()
         val containers = mLayer?.containers
 
-        mLayer?.setOnFeatureClickListener({ feature ->
-            if(feature == null){
-                return@setOnFeatureClickListener
-            }
-            val wordCoord = feature.getProperty("name").split(":").map { it.toInt() }
-            val line = wordCoord[0]
-            val word = wordCoord[1] - 1
+        mLayer?.setOnFeatureClickListener({ onFeatureClick(it)})
+    }
 
-            Log.i("KmlClick", "Feature clicked: " + feature.getProperty("name"))
-            val location = "Line: $line, position: ${wordCoord[1]}"
-            collectWord(mLyrics[line]?.get(word), location)
-        })
+    private fun onFeatureClick(feature: Feature) {
+        if(feature == null){
+            return
+        }
+        val wordCoord = feature.getProperty("name").split(":").map { it.toInt() }
+        val line = wordCoord[0]
+        val word = wordCoord[1] - 1
+
+        Log.i("KmlClick", "Feature clicked: " + feature.getProperty("name"))
+        val locationInText = "Line: $line, position: ${wordCoord[1]}"
+        collectWord(mLyrics[line]?.get(word), locationInText)
     }
 
     /**
@@ -336,9 +342,19 @@ class MapsActivity :
                 withIdentifier(1)
                 .withName("Songs")
                 .withIcon(R.drawable.ic_music_note_black_24dp)
+                .withSelectable(false)
+                .withSelectedTextColor(resources.getColor(R.color.primaryColor))
 
+        val user = FirebaseAuth.getInstance().currentUser
+
+        val header = AccountHeaderBuilder()
+                .withActivity(this)
+                .withHeaderBackground(R.drawable.header)
+                .addProfiles(ProfileDrawerItem().withEmail(user?.email).withIcon(R.drawable.ic_account_circle_black_24dp))
+                .build()
 
         mDrawer = DrawerBuilder()
+                .withAccountHeader(header)
                 .withActivity(this)
                 .addDrawerItems(
                         item1
@@ -346,7 +362,7 @@ class MapsActivity :
                 .withFullscreen(true)
                 .withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener{ _, position, _ ->
                         when(position) {
-                            0 -> run {
+                            1 -> run {
                                 startActivity(Intent(this, MainActivity::class.java))
                                 return@OnDrawerItemClickListener true
                             }
@@ -356,10 +372,9 @@ class MapsActivity :
                         }
                     }).build()
 
+        mDrawer.setSelection(-1)
 
-
-        //USE THIS CODE TO GET A FULL TRANSPARENT STATUS BAR
-        //YOU HAVE TO UNCOMMENT THE setWindowFlag too.
+        // Code makes sure the drawer doesn't brake the fullscreen mode
         if (Build.VERSION.SDK_INT in 19..20) {
             setWindowFlag(this, WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS, true)
         }
@@ -379,8 +394,8 @@ class MapsActivity :
     }
 
 
-    fun setWindowFlag(activity: Activity, bits: Int, on: Boolean) {
-        val win = activity.window;
+    private fun setWindowFlag(activity: Activity, bits: Int, on: Boolean) {
+        val win = activity.window
         val winParams = win.attributes;
         if (on) {
             winParams.flags = winParams.flags or bits
@@ -393,10 +408,46 @@ class MapsActivity :
 
     private fun buildSlidingPanel() {
         sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
+        song_name_input.setOnEditorActionListener({view, actionId, event -> 
+            var handled = false
+
+            if(actionId === EditorInfo.IME_ACTION_DONE){
+                guessSong(view.text.toString())
+                handled = true
+            }
+            return@setOnEditorActionListener handled
+        })
         mWordsAdapter = WordAdapter(mCollectedWords, this)
         mWordsListView = lyrics_word_list
         mWordsListView.adapter = mWordsAdapter
     }
+
+    private fun guessSong(songName: String) {
+        var dialog: Dialog
+        if(mSongTitle == songName){
+           dialog = AlertDialog.Builder(this)
+                    .setTitle("Success!")
+                    .setMessage("Congratulations you guessed the song.")
+                    .setNeutralButton("New Song", { _, _ ->
+                        startActivity(Intent(this, MainActivity::class.java))
+                    })
+                    .create()
+        } else {
+            dialog = AlertDialog.Builder(this)
+                    .setTitle("Wrong")
+                    .setMessage("Keep trying you are close!")
+                    .setNeutralButton("New Song", { _, _ ->
+                        startActivity(Intent(this, MainActivity::class.java))
+                    })
+                    .setPositiveButton("Try again", { dialog, _ ->
+                        dialog.dismiss()
+                    })
+                    .create()
+        }
+
+        dialog.show()
+    }
+
 
     private fun toggleMenu(view: View) {
         if (mDrawer.drawerLayout.isDrawerOpen(Gravity.LEFT)) {

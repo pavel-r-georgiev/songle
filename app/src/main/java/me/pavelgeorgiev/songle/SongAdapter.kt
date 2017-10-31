@@ -3,13 +3,10 @@ package me.pavelgeorgiev.songle
 import android.content.Context
 import android.content.Intent
 import android.support.v7.widget.RecyclerView
-import android.text.Layout
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import kotlinx.android.synthetic.main.song_list_item.view.*
-import java.util.*
 
 
 class SongAdapter (private val songs: List<Song>, private val context: Context)
@@ -29,6 +26,7 @@ class SongAdapter (private val songs: List<Song>, private val context: Context)
         val intent = Intent(holder.cv.context, DifficultyActivity::class.java)
 //     Put number of song. Used to load corresponding words on map
         intent.putExtra(context.getString(R.string.intent_song_number), song.number)
+        intent.putExtra(context.getString(R.string.intent_song_title), song.title)
 
 
         holder.artist.text = song.artist

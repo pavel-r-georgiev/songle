@@ -54,4 +54,5 @@
     <string name="dialog_login_disclaimer">No progress will be saved. To enable progress synchronization you should log in now or later within the app.</string>
     <string name="continue_button">CONTINUE</string>
     <string name="cancel_button">CANCEL</string>
+    <string name="intent_song_title">SONG_NAME</string>
 </resources>
