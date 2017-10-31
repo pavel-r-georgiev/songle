@@ -66,6 +66,7 @@ class MapsActivity :
     private var mCollectedWords = HashMap<String, String>()
     private lateinit var mWordsAdapter: WordAdapter
     private lateinit var mWordsListView: ListView
+    private lateinit var mPlacemarks: HashMap<LatLng, Placemark>
 
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
     val TAG = "MapsActivity"
@@ -194,8 +195,9 @@ class MapsActivity :
     }
 
     private fun onKmlDownload(bytes: ByteArray) {
-        mLayer = KmlLayer(mMap, bytes.inputStream(), applicationContext)
-
+//        mLayer = KmlLayer(mMap, bytes.inputStream(), applicationContext)
+        val placemarks = KmlParser().parse(bytes.inputStream())
+        placemarks.forEach({println(it.key.latitude)})
         mLayer?.addLayerToMap()
         val containers = mLayer?.containers
 
