@@ -67,6 +67,7 @@ class MapsActivity :
     private lateinit var mLastPlacemarkLocation: LatLng
 
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
+    val COLLECT_DISTANCE_THRESHOLD = 20
     val TAG = "MapsActivity"
     val LOCATION_REQUEST_INTERVAL: Long = 5000
     val LOCATION_REQUEST_FASTEST_INTERVAL: Long = 1000
@@ -201,9 +202,9 @@ class MapsActivity :
         mMap.setOnMarkerClickListener { onMarkerClick(it) }
         mPlacemarks.forEach({createMarker(it, it.location)})
         if(mCurrLocationMarker != null){
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrLocationMarker!!.position, 17.5F))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrLocationMarker!!.position, 17.7F))
         } else {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLastPlacemarkLocation,17.5F))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLastPlacemarkLocation,17.7F))
         }
     }
 
@@ -230,22 +231,42 @@ class MapsActivity :
 //    }
 
     private fun onMarkerClick(marker: Marker): Boolean {
-        if(marker == null){
+        if(marker == null || mCurrLocationMarker == null){
             return false
         }
+        val distance = FloatArray(1)
+        distanceBetween(marker.position, mCurrLocationMarker!!.position,distance)
+        println("DISTANCE -> ${distance[0]}")
+        if(distance[0] > COLLECT_DISTANCE_THRESHOLD){
+            return false
+        }
+
         val wordCoord = marker.title.split(":").map { it.toInt() }
         val line = wordCoord[0]
         val word = wordCoord[1] - 1
 
-        marker.remove()
+
 
         Log.i("Marker click", "Marker clicked: " + marker.title)
         val locationInText = "Line: $line, position: ${wordCoord[1]}"
 
-        if(marker.)
+
         collectWord(mLyrics[line]?.get(word), locationInText)
+        marker.remove()
 
         return true
+    }
+
+    private fun distanceBetween(point1: LatLng, point2: LatLng, result: FloatArray){
+        if(point1 == null || point2 == null){
+            return
+        }
+        return Location.distanceBetween(
+                point1.latitude,
+                point1.longitude,
+                point2.latitude,
+                point2.longitude,
+                result)
     }
 
     /**
@@ -535,7 +556,7 @@ class MapsActivity :
         mCurrLocationMarker = mMap.addMarker(markerOptions)
 
         //Move map camera
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17.5F));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17.7F));
     }
 
 }
