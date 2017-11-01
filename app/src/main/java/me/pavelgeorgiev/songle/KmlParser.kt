@@ -1,7 +1,11 @@
 package me.pavelgeorgiev.songle
 
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.drawable.BitmapDrawable
 import android.util.Xml
 import com.google.android.gms.maps.model.LatLng
+import com.squareup.picasso.Picasso
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
@@ -11,15 +15,23 @@ class KmlParser {
     //    We don't use namespace
     private val ns = null
     private val DOCUMENT_TAG = "Document"
+    private val STYLE_TAG = "Style"
+    private val ICON_STYLE_TAG = "IconStyle"
+    private val ICON_TAG = "Icon"
+    private val SCALE_TAG = "scale"
+    private val HREF_TAG = "href"
     private val PLACEMARK_TAG = "Placemark"
     private val NAME_TAG = "name"
     private val DESCRIPTION_TAG = "description"
     private val STYLE_URL_TAG = "styleUrl"
     private val POINT_TAG = "Point"
     private val COORDINATES_TAG = "coordinates"
+    private lateinit var mContext: Context
+    private val mStyles = HashMap<String, KmlStyle>()
 
     @Throws(XmlPullParserException::class, IOException::class)
-    fun parse(input : InputStream): HashMap<LatLng, Placemark> {
+    fun parse(input : InputStream, context: Context): HashSet<Placemark> {
+        mContext = context
         input.use {
             val parser = Xml.newPullParser()
             parser.setFeature(XmlPullParser.FEATURE_PROCESS_NAMESPACES, false)
@@ -32,8 +44,8 @@ class KmlParser {
     }
 
     @Throws(XmlPullParserException::class, IOException::class)
-    private fun readPlacemarks(parser: XmlPullParser): HashMap<LatLng, Placemark>{
-        val placemarks = HashMap<LatLng, Placemark>()
+    private fun readPlacemarks(parser: XmlPullParser): HashSet<Placemark> {
+        val placemarks = HashSet<Placemark> ()
 
         parser.require(XmlPullParser.START_TAG, ns, DOCUMENT_TAG)
 
@@ -42,14 +54,74 @@ class KmlParser {
                 continue
             }
 
-            if(parser.name == PLACEMARK_TAG){
-                val placemark = readPlacemark(parser)
-                placemarks.put(LatLng(placemark.lat, placemark.lng), placemark)
-            } else {
-                skip(parser)
+            when {
+                parser.name == PLACEMARK_TAG -> {
+                    val placemark = readPlacemark(parser)
+                    placemarks.add(placemark)
+                }
+                parser.name == STYLE_TAG -> {
+                    val style = readStyle(parser)
+                    mStyles.put(style.id, style)
+                }
+                else -> skip(parser)
+            }
+            }
+        return placemarks
+    }
+
+    @Throws(XmlPullParserException::class, IOException::class)
+    private fun readStyle(parser: XmlPullParser): KmlStyle {
+        parser.require(XmlPullParser.START_TAG, ns, STYLE_TAG)
+        var style = KmlStyle(parser.getAttributeValue(null, "id"))
+
+        while(parser.next() != XmlPullParser.END_TAG) {
+            if(parser.eventType != XmlPullParser.START_TAG){
+                continue
+            }
+
+            when(parser.name){
+                ICON_STYLE_TAG -> readIconStyle(parser, style)
+                else -> skip(parser)
             }
         }
-        return placemarks
+
+        return style
+    }
+
+    @Throws(XmlPullParserException::class, IOException::class)
+    private fun readIconStyle(parser: XmlPullParser, style: KmlStyle) {
+        parser.require(XmlPullParser.START_TAG, ns, ICON_STYLE_TAG)
+
+        while(parser.next() != XmlPullParser.END_TAG) {
+            if(parser.eventType != XmlPullParser.START_TAG){
+                continue
+            }
+
+            when(parser.name){
+                SCALE_TAG -> style.scale = readTagText(parser, SCALE_TAG).toFloat()
+                ICON_TAG -> style.iconUrl = readIconHref(parser, style)
+                else -> skip(parser)
+            }
+        }
+    }
+
+    @Throws(XmlPullParserException::class, IOException::class)
+    private fun readIconHref(parser: XmlPullParser, style: KmlStyle): String {
+        parser.require(XmlPullParser.START_TAG, ns, ICON_TAG)
+        var href = ""
+
+        while(parser.next() != XmlPullParser.END_TAG) {
+            if(parser.eventType != XmlPullParser.START_TAG){
+                continue
+            }
+
+            when(parser.name){
+                HREF_TAG -> href = readTagText(parser, HREF_TAG)
+                else -> skip(parser)
+            }
+        }
+
+        return href
     }
 
     @Throws(XmlPullParserException::class, IOException::class)
@@ -76,7 +148,13 @@ class KmlParser {
         }
 
         val mapCoordinates = coordinates.split(",").map { it.toDouble() }
-        return Placemark(name, description, styleUrl, mapCoordinates[0], mapCoordinates[1])
+        val styleID = styleUrl.substring(1)
+        return Placemark(
+                name,
+                description,
+                styleUrl,
+                LatLng(mapCoordinates[1], mapCoordinates[0]),
+                mStyles[styleID])
     }
 
     @Throws(IOException::class, XmlPullParserException::class)

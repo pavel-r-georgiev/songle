@@ -17,10 +17,6 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.location.LocationListener;
 import android.os.Build
 import android.support.v7.app.AlertDialog
@@ -29,6 +25,7 @@ import android.view.Gravity
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.*
+import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.maps.android.data.Feature
@@ -66,7 +63,8 @@ class MapsActivity :
     private var mCollectedWords = HashMap<String, String>()
     private lateinit var mWordsAdapter: WordAdapter
     private lateinit var mWordsListView: ListView
-    private lateinit var mPlacemarks: HashMap<LatLng, Placemark>
+    private lateinit var mPlacemarks: HashSet<Placemark>
+    private lateinit var mLastPlacemarkLocation: LatLng
 
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
     val TAG = "MapsActivity"
@@ -196,25 +194,58 @@ class MapsActivity :
 
     private fun onKmlDownload(bytes: ByteArray) {
 //        mLayer = KmlLayer(mMap, bytes.inputStream(), applicationContext)
-        val placemarks = KmlParser().parse(bytes.inputStream())
-        placemarks.forEach({println(it.key.latitude)})
-        mLayer?.addLayerToMap()
-        val containers = mLayer?.containers
+//        mLayer?.addLayerToMap()
+//        mLayer?.setOnFeatureClickListener({ onFeatureClick(it)})
+        mPlacemarks = KmlParser().parse(bytes.inputStream(), this)
 
-        mLayer?.setOnFeatureClickListener({ onFeatureClick(it)})
+        mMap.setOnMarkerClickListener { onMarkerClick(it) }
+        mPlacemarks.forEach({createMarker(it, it.location)})
+        if(mCurrLocationMarker != null){
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrLocationMarker!!.position, 17.5F))
+        } else {
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLastPlacemarkLocation,17.5F))
+        }
     }
 
-    private fun onFeatureClick(feature: Feature) {
-        if(feature == null){
-            return
+    private fun createMarker(placemark: Placemark, location: LatLng){
+        mLastPlacemarkLocation = location
+        mMap.addMarker(MarkerOptions()
+                        .position(location)
+                        .title(placemark.name)
+                        .snippet(placemark.description))
+
+    }
+
+//    private fun onFeatureClick(marker: Feature) {
+//        if(feature == null){
+//            return
+//        }
+//        val wordCoord = feature.getProperty("name").split(":").map { it.toInt() }
+//        val line = wordCoord[0]
+//        val word = wordCoord[1] - 1
+//
+//        Log.i("KmlClick", "Feature clicked: " + feature.getProperty("name"))
+//        val locationInText = "Line: $line, position: ${wordCoord[1]}"
+//        collectWord(mLyrics[line]?.get(word), locationInText)
+//    }
+
+    private fun onMarkerClick(marker: Marker): Boolean {
+        if(marker == null){
+            return false
         }
-        val wordCoord = feature.getProperty("name").split(":").map { it.toInt() }
+        val wordCoord = marker.title.split(":").map { it.toInt() }
         val line = wordCoord[0]
         val word = wordCoord[1] - 1
 
-        Log.i("KmlClick", "Feature clicked: " + feature.getProperty("name"))
+        marker.remove()
+
+        Log.i("Marker click", "Marker clicked: " + marker.title)
         val locationInText = "Line: $line, position: ${wordCoord[1]}"
+
+        if(marker.)
         collectWord(mLyrics[line]?.get(word), locationInText)
+
+        return true
     }
 
     /**
@@ -426,7 +457,7 @@ class MapsActivity :
 
     private fun guessSong(songName: String) {
         var dialog: Dialog
-        if(mSongTitle == songName){
+        if(mSongTitle.toLowerCase() == songName.toLowerCase()){
            dialog = AlertDialog.Builder(this)
                     .setTitle("Success!")
                     .setMessage("Congratulations you guessed the song.")
