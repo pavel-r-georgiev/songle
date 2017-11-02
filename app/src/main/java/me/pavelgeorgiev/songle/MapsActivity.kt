@@ -30,14 +30,20 @@ import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.maps.android.data.Feature
 import com.google.maps.android.data.kml.KmlLayer
+import com.mikepenz.materialdrawer.AccountHeader
 import com.mikepenz.materialdrawer.AccountHeaderBuilder
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.DrawerBuilder
+import com.mikepenz.materialdrawer.model.DividerDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem
+import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
+import com.squareup.picasso.Picasso
+import com.squareup.picasso.Target
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import kotlinx.android.synthetic.main.activity_maps.*
+import me.pavelgeorgiev.songle.R.drawable.header
 
 
 @Suppress("DEPRECATION")
@@ -53,7 +59,6 @@ class MapsActivity :
     private lateinit var mGoogleApiClient: GoogleApiClient
     private lateinit var mLocationRequest: LocationRequest
     private lateinit var mLastLocation: Location
-    private var mLayer: KmlLayer? = null
     private lateinit var mSongNumber: String
     private lateinit var mSongTitle: String
     private lateinit var mSongMapVersion: String
@@ -73,6 +78,12 @@ class MapsActivity :
     val LOCATION_REQUEST_FASTEST_INTERVAL: Long = 1000
     val KML_TYPE = "KML"
     val TXT_TYPE = "TXT"
+//    Marker style IDs
+    val UNCLASSIFIED = "unclassified"
+    val BORING = "boring"
+    val NOT_BORING = "notboring"
+    val INTERESTING = "interesting"
+    val VERY_INTERESTING = "veryinteresting"
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -122,8 +133,6 @@ class MapsActivity :
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
-
-        mLayer?.removeLayerFromMap()
     }
 
 
@@ -199,8 +208,9 @@ class MapsActivity :
 //        mLayer?.setOnFeatureClickListener({ onFeatureClick(it)})
         mPlacemarks = KmlParser().parse(bytes.inputStream(), this)
 
-        mMap.setOnMarkerClickListener { onMarkerClick(it) }
         mPlacemarks.forEach({createMarker(it, it.location)})
+        mMap.setOnMarkerClickListener { onMarkerClick(it) }
+
         if(mCurrLocationMarker != null){
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrLocationMarker!!.position, 17.7F))
         } else {
@@ -210,28 +220,27 @@ class MapsActivity :
 
     private fun createMarker(placemark: Placemark, location: LatLng){
         mLastPlacemarkLocation = location
-        mMap.addMarker(MarkerOptions()
-                        .position(location)
-                        .title(placemark.name)
-                        .snippet(placemark.description))
+
+        val markerOptions = MarkerOptions()
+        markerOptions.position(location)
+        markerOptions.title(placemark.name)
+        markerOptions.snippet(placemark.description)
+
+        when(placemark.style?.id){
+            UNCLASSIFIED -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+            BORING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
+            NOT_BORING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+            INTERESTING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+            VERY_INTERESTING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
+            else -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+        }
+
+        mMap.addMarker(markerOptions)
 
     }
-
-//    private fun onFeatureClick(marker: Feature) {
-//        if(feature == null){
-//            return
-//        }
-//        val wordCoord = feature.getProperty("name").split(":").map { it.toInt() }
-//        val line = wordCoord[0]
-//        val word = wordCoord[1] - 1
-//
-//        Log.i("KmlClick", "Feature clicked: " + feature.getProperty("name"))
-//        val locationInText = "Line: $line, position: ${wordCoord[1]}"
-//        collectWord(mLyrics[line]?.get(word), locationInText)
-//    }
-
+    
     private fun onMarkerClick(marker: Marker): Boolean {
-        if(marker == null || mCurrLocationMarker == null){
+        if(marker == null || marker.title == "Current Position" || mCurrLocationMarker == null){
             return false
         }
         val distance = FloatArray(1)
@@ -397,34 +406,19 @@ class MapsActivity :
                 .withName("Songs")
                 .withIcon(R.drawable.ic_music_note_black_24dp)
                 .withSelectable(false)
-                .withSelectedTextColor(resources.getColor(R.color.primaryColor))
 
-        val user = FirebaseAuth.getInstance().currentUser
-
-        val header = AccountHeaderBuilder()
-                .withActivity(this)
-                .withHeaderBackground(R.drawable.header)
-                .addProfiles(ProfileDrawerItem().withEmail(user?.email).withIcon(R.drawable.ic_account_circle_black_24dp))
-                .build()
-
-        mDrawer = DrawerBuilder()
-                .withAccountHeader(header)
-                .withActivity(this)
-                .addDrawerItems(
-                        item1
-                )
-                .withFullscreen(true)
-                .withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener{ _, position, _ ->
-                        when(position) {
-                            1 -> run {
-                                startActivity(Intent(this, MainActivity::class.java))
-                                return@OnDrawerItemClickListener true
-                            }
-                            else -> {
-                                return@OnDrawerItemClickListener false
-                            }
-                        }
-                    }).build()
+        mDrawer = CommonFunctions.buildDrawerNav(arrayOf(item1), this)
+                .withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener { _, position, _ ->
+                when (position) {
+                    1 -> {
+                        startActivity(Intent(this, MainActivity::class.java))
+                        return@OnDrawerItemClickListener true
+                    }
+                    else -> {
+                        return@OnDrawerItemClickListener false
+                    }
+                }
+            }).build()
 
         mDrawer.setSelection(-1)
 

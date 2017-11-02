@@ -10,7 +10,7 @@ import android.widget.TextView
 import android.widget.EditText
 import com.google.firebase.auth.FirebaseAuth
 
-import kotlinx.android.synthetic.main.activity_login.*
+import kotlinx.android.synthetic.main.activity_login_logout.*
 import com.google.firebase.auth.FirebaseUser
 import android.widget.Toast
 import android.text.SpannableString
@@ -40,7 +40,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_login)
+        setContentView(R.layout.activity_login_logout)
 
         // Views
         mStatusTextView = status
@@ -94,7 +94,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(TAG, "createUserWithEmail:failure", task.exception)
-                        Toast.makeText(this@LoginActivity, "Authentication failed.",
+                        Toast.makeText(this@LoginActivity, task.exception!!.message,
                                 Toast.LENGTH_SHORT).show()
                         updateUI(null)
                     }
@@ -125,7 +125,6 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                         Log.w(TAG, "signInWithEmail:failure", task.exception)
                         Toast.makeText(this@LoginActivity, "Authentication failed.",
                                 Toast.LENGTH_SHORT).show()
-                        updateUI(null)
                     }
 
                     if (!task.isSuccessful) {
@@ -167,7 +166,6 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                         Log.w(TAG, "signInAnonymously:failure", task.exception)
                         Toast.makeText(this@LoginActivity, "Authentication failed.",
                                 Toast.LENGTH_SHORT).show()
-                        updateUI(null)
                     }
                 }
     }
@@ -219,13 +217,6 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private fun updateUI(user: FirebaseUser?) {
         hideProgressDialog()
         if (user != null) {
-            mStatusTextView.text = getString(R.string.login_status_fmt,
-                    user.email, user.isEmailVerified)
-
-            email_password_buttons.visibility = View.GONE
-            email_password_fields.visibility = View.GONE
-            signed_in_buttons.visibility = View.VISIBLE
-            mDetailTextView.visibility = View.GONE
             hideSoftKeyboard(mStatusTextView)
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)

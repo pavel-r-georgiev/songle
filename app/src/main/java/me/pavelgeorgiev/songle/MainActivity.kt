@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.mikepenz.materialdrawer.AccountHeaderBuilder
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.DrawerBuilder
+import com.mikepenz.materialdrawer.model.DividerDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
@@ -66,28 +67,12 @@ class MainActivity : AppCompatActivity(), DownloadXmlCallback {
                 .withName("Completed Songs")
                 .withIcon(R.drawable.ic_library_music_black_24dp)
                 .withSelectable(false)
-                .withSelectedTextColor(resources.getColor(R.color.primaryColor))
-
-        val user = FirebaseAuth.getInstance().currentUser
-
-        val header = AccountHeaderBuilder()
-                .withActivity(this)
-                .withHeaderBackground(R.drawable.header)
-                .addProfiles(ProfileDrawerItem().withEmail(user?.email).withIcon(R.drawable.ic_account_circle_black_24dp))
-                .build()
 
 
-        mDrawer = DrawerBuilder()
-                .withAccountHeader(header)
-                .withToolbar(mToolbar)
-                .withActivity(this)
-                .addDrawerItems(
-                        item1
-                )
-                .withFullscreen(true)
-                .withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener{ _, position, _ ->
-                    when(position) {
-                        1 -> run {
+        mDrawer = CommonFunctions.buildDrawerNav(arrayOf(item1), this, mToolbar)
+                .withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener { _, position, _ ->
+                    when (position) {
+                        1 -> {
                             startActivity(Intent(this, MainActivity::class.java))
                             return@OnDrawerItemClickListener true
                         }

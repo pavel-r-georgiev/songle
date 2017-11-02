@@ -58,6 +58,12 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity
+            android:name=".LogoutActivity"
+            android:label="@string/title_activity_logout"
+            android:windowSoftInputMode="stateHidden">
+        </activity>
     </application>
 
 </manifest>

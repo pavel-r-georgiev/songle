@@ -24,7 +24,7 @@
     <string name="difficulty_hard_description">75% of the words are visible on the map.</string>
     <string name="difficulty_very_hard_description">50% of the words are visible on the map.</string>
     <string name="difficulty_impossible_description">25% of the words are visible on the map.</string>
-    <string name="title_activity_login">Sign in</string>
+    <string name="title_activity_login">Songle</string>
 
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
@@ -46,13 +46,18 @@
     <string name="hint_email">E-mail</string>
     <string name="signed_out">Please sign in</string>
     <string name="login_anonymously">or login anonymously.</string>
-    <string name="login_status_fmt">Email User: %1$s (verified: %2$b)</string>
+    <string name="login_status_fmt">Email User: %1$s</string>
     <string name="user_status_fmt">User: %s</string>
     <string name="desc_songle">Songle</string>
     <string name="login_title_text">Welcome to Songle.</string>
     <string name="auth_failed">Authentication failed</string>
-    <string name="dialog_login_disclaimer">No progress will be saved. To enable progress synchronization you should log in now or later within the app.</string>
+    <string name="dialog_login_disclaimer">No progress will be saved across devices. To enable progress synchronization you should log in now or create an account later within the app.</string>
     <string name="continue_button">CONTINUE</string>
     <string name="cancel_button">CANCEL</string>
     <string name="intent_song_title">SONG_NAME</string>
+    <string name="title_activity_logout">Sign out</string>
+    <string name="logout_title">We hate to see you go.</string>
+    <string name="go_back_to_songs">Return to exploring new songs</string>
+    <string name="link_account">Link Account</string>
+    <string name="account_management_title">Link your account to save your progress.</string>
 </resources>

@@ -2,7 +2,6 @@ package me.pavelgeorgiev.songle
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.util.Xml
 import com.google.android.gms.maps.model.LatLng
 import com.squareup.picasso.Picasso
