@@ -6,7 +6,10 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.song_list_item.view.*
+import android.R.attr.radius
+import jp.wasabeef.blurry.Blurry
 
 
 class SongAdapter (private val songs: List<Song>, private val context: Context)
@@ -33,6 +36,19 @@ class SongAdapter (private val songs: List<Song>, private val context: Context)
         holder.title.text = if(Math.random() > 0.5) song.title else context.getString(R.string.unknown)
         holder.link.text = if(holder.title.text != context.getString(R.string.unknown)) song.link else ""
 
+        val youtubeLink = song.link.trim().split("/")
+        val imageUrl = "http://img.youtube.com/vi/${youtubeLink.last()}/maxresdefault.jpg"
+        Picasso.with(context).load(imageUrl).into(holder.image)
+        if(holder.title.text == context.getString(R.string.unknown)){
+            holder.image.post({
+                Blurry.with(context)
+                        .radius(40)
+                        .sampling(2)
+                        .capture(holder.image)
+                        .into(holder.image)
+            })
+        }
+
         holder.cv.setOnClickListener({ holder.cv.context.startActivity(intent) })
     }
 
@@ -41,6 +57,7 @@ class SongAdapter (private val songs: List<Song>, private val context: Context)
         val title = view.song_name
         val artist = view.song_artist
         val link = view.song_link
+        val image = view.song_image
     }
 
 

@@ -49,6 +49,7 @@ dependencies {
         exclude group: 'com.android.support'
     }
     compile 'com.squareup.picasso:picasso:2.5.2'
+    compile 'jp.wasabeef:blurry:2.1.1'
 }
 
 
