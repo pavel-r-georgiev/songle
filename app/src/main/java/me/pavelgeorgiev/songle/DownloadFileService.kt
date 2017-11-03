@@ -14,13 +14,17 @@ class DownloadFileService(private val caller : DownloadFileCallback, private val
     val CONNECTION_TIMEOUT = 15000
     lateinit var mStream : InputStream
     lateinit var output : ByteArray
+    private var error = false
+    private var errorMessage: String? = null
 
     override fun doInBackground(vararg urls: String) : ByteArray {
         try {
             mStream = downloadUrl(urls[0])
             output = mStream.readBytes()
         } catch (e: IOException) {
-            println("Unable to load content. Check your network connection.")
+            error = true
+            errorMessage = e.message
+            println(errorMessage)
         }
         return output
     }
@@ -43,6 +47,10 @@ class DownloadFileService(private val caller : DownloadFileCallback, private val
 
     override fun onPostExecute(result: ByteArray) {
         super.onPostExecute(result)
-        caller.downloadComplete(result, fileType)
+        if(!error) {
+            caller.downloadComplete(result, fileType)
+        } else {
+            caller.downloadFailed(errorMessage)
+        }
     }
 }

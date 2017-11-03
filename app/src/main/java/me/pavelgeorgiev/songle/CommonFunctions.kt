@@ -34,25 +34,31 @@ class CommonFunctions {
                         .withSelectable(false)
 
 
-                val user_management = PrimaryDrawerItem().
+                val userManagement = PrimaryDrawerItem().
                         withIdentifier(1)
                         .withSelectable(false)
 
                 val user = FirebaseAuth.getInstance().currentUser
 
+                val userProfile = ProfileDrawerItem().withEmail(user?.email ?: "Anonymous")
+
+                if(user?.email.isNullOrEmpty()){
+                    userProfile.withEmail("Anonymous")
+                } else {
+                    userProfile.withEmail(user?.email)
+                }
+
                 val header = AccountHeaderBuilder()
                         .withActivity(context as Activity)
                         .withHeaderBackground(R.drawable.header)
-                        .addProfiles(ProfileDrawerItem().withEmail(user?.email).withIcon(R.drawable.ic_account_circle_black_24dp))
+                        .addProfiles(userProfile)
                         .withSelectionListEnabledForSingleProfile(false)
                         .withProfileImagesVisible(false)
 
-
-
             if (user?.email.isNullOrEmpty()) {
-                    user_management.withName("Account Management")
-                    user_management.withIcon(R.drawable.ic_account_circle_black_24dp)
-                    user_management.withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener({ _, _, _ ->
+                    userManagement.withName("Account Management")
+                    userManagement.withIcon(R.drawable.ic_account_circle_black_24dp)
+                    userManagement.withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener({ _, _, _ ->
                         context.startActivity(Intent(context, LogoutActivity::class.java))
                         return@OnDrawerItemClickListener true
                     }))
@@ -61,9 +67,9 @@ class CommonFunctions {
                         context.startActivity(Intent(context, LogoutActivity::class.java))
                         return@withOnAccountHeaderSelectionViewClickListener true
                     })
-                    user_management.withName("Sign out")
-                    user_management.withIcon(R.drawable.ic_exit_to_app_black_24dp)
-                    user_management.withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener({ _, _, _ ->
+                    userManagement.withName("Sign out")
+                    userManagement.withIcon(R.drawable.ic_exit_to_app_black_24dp)
+                    userManagement.withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener({ _, _, _ ->
                         CommonFunctions.signOut(context)
                         return@OnDrawerItemClickListener true
                     }))
@@ -76,7 +82,7 @@ class CommonFunctions {
                         .addDrawerItems(
                                 *items,
                                 DividerDrawerItem(),
-                                user_management
+                                userManagement
                         )
                         .withFullscreen(true)
 

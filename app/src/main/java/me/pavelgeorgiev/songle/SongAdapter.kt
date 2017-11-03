@@ -35,7 +35,7 @@ class SongAdapter (private val songs: List<Song>, private val context: Context)
 
         holder.artist.text = song.artist
         holder.title.text = if(Math.random() > 0.5) song.title else context.getString(R.string.unknown)
-        holder.link.text = if(holder.title.text != context.getString(R.string.unknown)) song.link else ""
+//        holder.link.text = if(holder.title.text != context.getString(R.string.unknown)) song.link else ""
 
         val youtubeLink = song.link.trim().split("/")
         val imageUrlBase = "http://img.youtube.com/vi/${youtubeLink.last()}"

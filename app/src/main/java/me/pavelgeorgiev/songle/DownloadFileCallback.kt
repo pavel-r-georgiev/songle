@@ -5,4 +5,5 @@ import java.io.InputStream
 
 interface DownloadFileCallback {
     fun downloadComplete(result: ByteArray, fileType: String)
+    fun downloadFailed(errorMessage: String?)
 }

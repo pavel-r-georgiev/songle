@@ -22,6 +22,7 @@ import android.os.Build
 import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.*
@@ -72,7 +73,7 @@ class MapsActivity :
     private lateinit var mLastPlacemarkLocation: LatLng
 
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
-    val COLLECT_DISTANCE_THRESHOLD = 20
+    val COLLECT_DISTANCE_THRESHOLD = 30
     val TAG = "MapsActivity"
     val LOCATION_REQUEST_INTERVAL: Long = 5000
     val LOCATION_REQUEST_FASTEST_INTERVAL: Long = 1000
@@ -104,7 +105,6 @@ class MapsActivity :
 
         val baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
         val mapVersion = "map$mSongMapVersion.kml"
-
         DownloadFileService(this, KML_TYPE).execute("$baseUrl/$mapVersion")
         DownloadFileService(this, TXT_TYPE).execute("$baseUrl/words.txt")
     }
@@ -180,6 +180,14 @@ class MapsActivity :
         }
     }
 
+    override fun downloadFailed(errorMessage: String?) {
+        AlertDialog.Builder(this).setTitle("Error")
+                .setMessage("Oops! Something went wrong.($errorMessage)")
+                .setPositiveButton(android.R.string.ok) { _, _ -> }
+                .setIcon(android.R.drawable.ic_dialog_alert).show()
+        Log.d(TAG, errorMessage)
+    }
+
     private fun onTxtDownload(bytes: ByteArray) {
         val inputStream = bytes.inputStream()
 
@@ -188,11 +196,18 @@ class MapsActivity :
                 parseLine(it)
             }
         }
+        inputStream.close()
     }
 
     private fun parseLine(line: String) {
         val lineList = line.trim().split("\\s+".toRegex())
-        val lineNumber = lineList[0].toInt()
+        var lineNumber: Int
+        try {
+            lineNumber = lineList[0].toInt()
+        } catch (e: NumberFormatException) {
+            Log.d(TAG, e.message)
+            return
+        }
 
         if (lineList.size < 2) {
             return
@@ -203,10 +218,9 @@ class MapsActivity :
     }
 
     private fun onKmlDownload(bytes: ByteArray) {
-//        mLayer = KmlLayer(mMap, bytes.inputStream(), applicationContext)
-//        mLayer?.addLayerToMap()
-//        mLayer?.setOnFeatureClickListener({ onFeatureClick(it)})
-        mPlacemarks = KmlParser().parse(bytes.inputStream(), this)
+        val inputStream = bytes.inputStream()
+        mPlacemarks = KmlParser().parse(inputStream, this)
+        inputStream.close()
 
         mPlacemarks.forEach({createMarker(it, it.location)})
         mMap.setOnMarkerClickListener { onMarkerClick(it) }
@@ -216,6 +230,7 @@ class MapsActivity :
         } else {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLastPlacemarkLocation,17.7F))
         }
+
     }
 
     private fun createMarker(placemark: Placemark, location: LatLng){
@@ -458,8 +473,8 @@ class MapsActivity :
         sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
         song_name_input.setOnEditorActionListener({view, actionId, event -> 
             var handled = false
-
-            if(actionId === EditorInfo.IME_ACTION_DONE){
+            println(actionId)
+            if((actionId === EditorInfo.IME_ACTION_DONE || actionId === EditorInfo.IME_NULL)){
                 guessSong(view.text.toString())
                 handled = true
             }
@@ -472,6 +487,7 @@ class MapsActivity :
 
     private fun guessSong(songName: String) {
         var dialog: Dialog
+
         if(mSongTitle.toLowerCase() == songName.toLowerCase()){
            dialog = AlertDialog.Builder(this)
                     .setTitle("Success!")
