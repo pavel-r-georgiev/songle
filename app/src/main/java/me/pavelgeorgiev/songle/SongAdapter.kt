@@ -9,7 +9,8 @@ import android.view.ViewGroup
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.song_list_item.view.*
 import android.R.attr.radius
-import jp.wasabeef.blurry.Blurry
+import com.squareup.picasso.Callback
+import jp.wasabeef.picasso.transformations.BlurTransformation
 
 
 class SongAdapter (private val songs: List<Song>, private val context: Context)
@@ -37,17 +38,26 @@ class SongAdapter (private val songs: List<Song>, private val context: Context)
         holder.link.text = if(holder.title.text != context.getString(R.string.unknown)) song.link else ""
 
         val youtubeLink = song.link.trim().split("/")
-        val imageUrl = "http://img.youtube.com/vi/${youtubeLink.last()}/maxresdefault.jpg"
-        Picasso.with(context).load(imageUrl).into(holder.image)
+        val imageUrlBase = "http://img.youtube.com/vi/${youtubeLink.last()}"
+        val imageUrlHighRes = "$imageUrlBase/maxresdefault.jpg"
+        val imageUrlNormal = "$imageUrlBase/0.jpg"
+        val picasso = Picasso.with(context).load(imageUrlHighRes).error(R.drawable.placeholder_song_image)
+
         if(holder.title.text == context.getString(R.string.unknown)){
-            holder.image.post({
-                Blurry.with(context)
-                        .radius(40)
-                        .sampling(2)
-                        .capture(holder.image)
-                        .into(holder.image)
-            })
+            picasso.transform(BlurTransformation(context, 25, 5))
         }
+
+        picasso.into(holder.image, object: Callback{
+            override fun onSuccess() {}
+            override fun onError() {
+                val picasso = Picasso.with(context).load(imageUrlNormal)
+                if(holder.title.text == context.getString(R.string.unknown)){
+                    picasso.transform(BlurTransformation(context, 15, 5))
+                }
+                picasso.into(holder.image)
+            }
+        })
+
 
         holder.cv.setOnClickListener({ holder.cv.context.startActivity(intent) })
     }

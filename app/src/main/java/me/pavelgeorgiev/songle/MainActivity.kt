@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity(), DownloadXmlCallback {
         setContentView(R.layout.activity_main)
 
         mToolbar = toolbar as Toolbar
+        mToolbar.title = getString(R.string.app_name)
 //
 //        val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
 //        this.registerReceiver(receiver, filter)
