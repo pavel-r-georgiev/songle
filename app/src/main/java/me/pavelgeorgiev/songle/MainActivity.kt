@@ -2,32 +2,29 @@ package me.pavelgeorgiev.songle
 
 import android.content.Context
 import android.content.Intent
-import android.net.ConnectivityManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
-import com.google.firebase.auth.FirebaseAuth
-import com.mikepenz.materialdrawer.AccountHeaderBuilder
 import com.mikepenz.materialdrawer.Drawer
-import com.mikepenz.materialdrawer.DrawerBuilder
-import com.mikepenz.materialdrawer.model.DividerDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
-import com.mikepenz.materialdrawer.model.ProfileDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
+import me.pavelgeorgiev.songle.R.layout.activity_main
+import android.content.IntentFilter
+import android.support.design.widget.Snackbar
 
 
-class MainActivity : AppCompatActivity(), DownloadXmlCallback {
-    private var receiver = NetworkReceiver()
+class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.NetworkStateReceiverListener {
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mLayoutManager: RecyclerView.LayoutManager
     private lateinit var mAdapter: RecyclerView.Adapter<SongAdapter.ViewHolder>
     private lateinit var mDrawer: Drawer
     private lateinit var mToolbar: Toolbar
+    private lateinit var mReceiver: NetworkReceiver
+    private var mSnackbar: Snackbar? = null
     private var mSongs = mutableListOf<Song>()
-    private var mContext = this
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,9 +33,7 @@ class MainActivity : AppCompatActivity(), DownloadXmlCallback {
 
         mToolbar = toolbar as Toolbar
         mToolbar.title = getString(R.string.app_name)
-//
-//        val filter = IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION)
-//        this.registerReceiver(receiver, filter)
+
         buildDrawerNav()
         mRecyclerView = recyclerView
 //        Improves perfomance on fixed size layout
@@ -49,17 +44,10 @@ class MainActivity : AppCompatActivity(), DownloadXmlCallback {
         mAdapter = SongAdapter(mSongs, this)
         mRecyclerView.adapter = mAdapter
 
-        if (isNetworkConnected()) {
-            getSongs()
-        } else {
-            AlertDialog.Builder(this).setTitle("No Internet Connection")
-                    .setMessage("Please check your internet connection and try again")
-                    .setPositiveButton(android.R.string.ok) { _, _ -> }
-                    .setIcon(android.R.drawable.ic_dialog_alert).show()
-        }
-
-
-
+        getSongs()
+        mReceiver =  NetworkReceiver()
+        mReceiver.addListener(this)
+        this.registerReceiver(mReceiver, IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
     private fun buildDrawerNav() {
@@ -86,31 +74,51 @@ class MainActivity : AppCompatActivity(), DownloadXmlCallback {
         mDrawer.setSelection(-1)
     }
 
-    /**
-     * Checks if device is connected to the Internet
-     */
-    private fun isNetworkConnected(): Boolean {
-        val connectivityManager = getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
-        val networkInfo = connectivityManager.activeNetworkInfo
-        return networkInfo != null && networkInfo.isConnected
+    public override fun onDestroy() {
+        super.onDestroy()
+        mReceiver.removeListener(this)
+        this.unregisterReceiver(mReceiver)
     }
-
-//    override fun onDestroy() {
-//        super.onDestroy()
-//        // Unregisters BroadcastReceiver when app is destroyed.
-//        if (receiver != null) {
-//            this.unregisterReceiver(receiver)
-//        }
-//    }
 
     private fun getSongs() {
-        DownloadXmlService(this).execute(getString(R.string.songs_xml_url))
+        if (NetworkReceiver.isNetworkConnected(this)) {
+            DownloadFileService(this, DownloadFileService.XML_TYPE).execute(getString(R.string.songs_xml_url))
+        } else {
+            AlertDialog.Builder(this).setTitle("No Internet Connection")
+                    .setMessage("Songle requires Internet connection. Please connect to continue.")
+                    .setPositiveButton(android.R.string.ok) { _, _ -> }
+                    .show()
+        }
     }
 
-    override fun downloadComplete(result: List<Song>) {
+
+    override fun downloadComplete(result: ByteArray, fileType: String) {
+        val result = SongsXmlParser().parse(result.inputStream())
         mSongs.clear()
         mSongs.addAll(result)
         mAdapter.notifyDataSetChanged()
+    }
+
+    override fun downloadFailed(errorMessage: String?, fileType: String) {
+        AlertDialog.Builder(this@MainActivity).setTitle("Download Error")
+                .setMessage("Failed downloading the song list.")
+                .setPositiveButton(getString(R.string.try_again)) { _, _ ->
+                    if(fileType == DownloadFileService.XML_TYPE){
+                        getSongs()
+                    }
+                }.show()
+    }
+
+    override fun networkAvailable() {
+       getSongs()
+       mSnackbar?.dismiss()
+    }
+
+    override fun networkUnavailable() {
+        val snackbar = Snackbar.make(findViewById(R.id.layout_main), "Network status: OFFLINE",
+                Snackbar.LENGTH_INDEFINITE)
+        mSnackbar = snackbar
+        snackbar.show()
     }
 
 }

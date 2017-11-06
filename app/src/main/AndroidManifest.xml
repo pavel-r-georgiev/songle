@@ -10,6 +10,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
 
     <!-- For app targets of Android 5.0 or higher -->
     <uses-feature android:name="android.hardware.location.gps" />
@@ -64,6 +65,14 @@
             android:label="@string/title_activity_logout"
             android:windowSoftInputMode="stateHidden">
         </activity>
+
+        <receiver
+            android:name="me.pavelgeorgiev.songle.NetworkReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>

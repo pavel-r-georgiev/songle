@@ -1,5 +1,6 @@
 package me.pavelgeorgiev.songle
 
+import android.content.BroadcastReceiver
 import android.os.AsyncTask
 import java.io.IOException
 import java.io.InputStream
@@ -9,6 +10,12 @@ import javax.net.ssl.HttpsURLConnection
 
 class DownloadFileService(private val caller : DownloadFileCallback, private val fileType : String) :
         AsyncTask<String, Void, ByteArray>() {
+
+    companion object {
+        val KML_TYPE = "KML"
+        val TXT_TYPE = "TXT"
+        val XML_TYPE = "XML"
+    }
 
     val READ_TIMEOUT = 1000
     val CONNECTION_TIMEOUT = 15000
@@ -26,6 +33,7 @@ class DownloadFileService(private val caller : DownloadFileCallback, private val
             errorMessage = e.message
             println(errorMessage)
         }
+
         return output
     }
 
@@ -50,7 +58,7 @@ class DownloadFileService(private val caller : DownloadFileCallback, private val
         if(!error) {
             caller.downloadComplete(result, fileType)
         } else {
-            caller.downloadFailed(errorMessage)
+            caller.downloadFailed(errorMessage, fileType)
         }
     }
 }

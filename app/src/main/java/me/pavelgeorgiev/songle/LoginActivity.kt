@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.view.View
 import android.widget.TextView
 import android.widget.EditText
@@ -12,7 +13,6 @@ import com.google.firebase.auth.FirebaseAuth
 
 import kotlinx.android.synthetic.main.activity_login_logout.*
 import com.google.firebase.auth.FirebaseUser
-import android.widget.Toast
 import android.text.SpannableString
 import android.util.Log
 import android.text.TextUtils
@@ -94,8 +94,9 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(TAG, "createUserWithEmail:failure", task.exception)
-                        Toast.makeText(this@LoginActivity, task.exception!!.message,
-                                Toast.LENGTH_SHORT).show()
+                        Snackbar.make(findViewById(R.id.login_logout_activity), task.exception!!.message.toString(),
+                                Snackbar.LENGTH_LONG)
+                                .show()
                         updateUI(null)
                     }
 
@@ -123,8 +124,10 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(TAG, "signInWithEmail:failure", task.exception)
-                        Toast.makeText(this@LoginActivity, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show()
+
+                        Snackbar.make(findViewById(R.id.login_logout_activity), task.exception!!.message.toString(),
+                                Snackbar.LENGTH_LONG)
+                                .show()
                     }
 
                     if (!task.isSuccessful) {
@@ -164,8 +167,9 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                     } else {
                         // If sign in fails, display a message to the user.
                         Log.w(TAG, "signInAnonymously:failure", task.exception)
-                        Toast.makeText(this@LoginActivity, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show()
+                        Snackbar.make(findViewById(R.id.login_logout_activity), task.exception!!.message.toString(),
+                                Snackbar.LENGTH_LONG)
+                                .show();
                     }
                 }
     }

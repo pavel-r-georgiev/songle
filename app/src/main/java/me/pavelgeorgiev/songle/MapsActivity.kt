@@ -4,9 +4,11 @@ import android.Manifest
 import android.app.Activity
 import android.app.Dialog
 import android.content.Intent
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
+import android.net.ConnectivityManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
@@ -19,28 +21,17 @@ import com.google.android.gms.location.LocationServices
 
 import com.google.android.gms.location.LocationListener;
 import android.os.Build
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.util.Log
 import android.view.Gravity
-import android.view.KeyEvent
 import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import com.google.android.gms.maps.*
 import com.google.android.gms.maps.model.*
-import com.google.firebase.auth.FirebaseAuth
-import com.google.maps.android.data.Feature
-import com.google.maps.android.data.kml.KmlLayer
-import com.mikepenz.materialdrawer.AccountHeader
-import com.mikepenz.materialdrawer.AccountHeaderBuilder
 import com.mikepenz.materialdrawer.Drawer
-import com.mikepenz.materialdrawer.DrawerBuilder
-import com.mikepenz.materialdrawer.model.DividerDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
-import com.mikepenz.materialdrawer.model.ProfileDrawerItem
-import com.mikepenz.materialdrawer.model.SecondaryDrawerItem
-import com.squareup.picasso.Picasso
-import com.squareup.picasso.Target
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import kotlinx.android.synthetic.main.activity_maps.*
@@ -54,7 +45,8 @@ class MapsActivity :
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
-        DownloadFileCallback {
+        DownloadFileCallback,
+        NetworkReceiver.NetworkStateReceiverListener{
 
     private lateinit var mMap: GoogleMap
     private lateinit var mGoogleApiClient: GoogleApiClient
@@ -71,20 +63,17 @@ class MapsActivity :
     private lateinit var mWordsListView: ListView
     private lateinit var mPlacemarks: HashSet<Placemark>
     private lateinit var mLastPlacemarkLocation: LatLng
+    private lateinit var kmlUrl: String
+    private lateinit var lyricsUrl: String
+    private lateinit var mReceiver: NetworkReceiver
+    private lateinit var mNetworkSnackbar: Snackbar
+    private lateinit var mErrorDialog: Dialog
 
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
     val COLLECT_DISTANCE_THRESHOLD = 30
     val TAG = "MapsActivity"
     val LOCATION_REQUEST_INTERVAL: Long = 5000
     val LOCATION_REQUEST_FASTEST_INTERVAL: Long = 1000
-    val KML_TYPE = "KML"
-    val TXT_TYPE = "TXT"
-//    Marker style IDs
-    val UNCLASSIFIED = "unclassified"
-    val BORING = "boring"
-    val NOT_BORING = "notboring"
-    val INTERESTING = "interesting"
-    val VERY_INTERESTING = "veryinteresting"
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -95,6 +84,8 @@ class MapsActivity :
                 .findFragmentById(R.id.mapFragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+
+        buildSnackbarAndDialogs()
         buildDrawerNav()
         buildSlidingPanel()
         buildGoogleApiClient()
@@ -105,10 +96,26 @@ class MapsActivity :
 
         val baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
         val mapVersion = "map$mSongMapVersion.kml"
-        DownloadFileService(this, KML_TYPE).execute("$baseUrl/$mapVersion")
-        DownloadFileService(this, TXT_TYPE).execute("$baseUrl/words.txt")
+        kmlUrl = "$baseUrl/$mapVersion"
+        lyricsUrl = "$baseUrl/words.txt"
+
+        getKml()
+        getLyrics()
+
+        mReceiver =  NetworkReceiver()
+        mReceiver.addListener(this)
+        this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
+    private fun buildSnackbarAndDialogs() {
+        mNetworkSnackbar = Snackbar.make(
+                findViewById(R.id.sliding_layout),
+                "Network status: OFFLINE",
+                Snackbar.LENGTH_INDEFINITE)
+        mErrorDialog =  AlertDialog.Builder(this).setTitle("No Internet Connection")
+                .setMessage("Songle requires Internet connection. Please connect to continue.")
+                .setPositiveButton(android.R.string.ok) { _, _ -> }.create()
+    }
 
     override fun onStart() {
         super.onStart()
@@ -132,6 +139,27 @@ class MapsActivity :
 //        Stop location updates when Activity is not active
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+        }
+    }
+
+
+    private fun getKml() {
+        if (NetworkReceiver.isNetworkConnected(this)) {
+            DownloadFileService(this, DownloadFileService.KML_TYPE).execute(kmlUrl)
+        } else {
+            if(!mErrorDialog.isShowing){
+                mErrorDialog.show()
+            }
+        }
+    }
+
+    private fun getLyrics() {
+        if (NetworkReceiver.isNetworkConnected(this)) {
+            DownloadFileService(this, DownloadFileService.TXT_TYPE).execute(lyricsUrl)
+        } else {
+            if(!mErrorDialog.isShowing){
+                mErrorDialog.show()
+            }
         }
     }
 
@@ -172,18 +200,24 @@ class MapsActivity :
      */
     @Throws(XmlPullParserException::class, IOException::class)
     override fun downloadComplete(bytes: ByteArray, fileType: String) {
-        if (fileType == KML_TYPE) {
+        if (fileType == DownloadFileService.KML_TYPE) {
             onKmlDownload(bytes)
         }
-        if (fileType == TXT_TYPE) {
+        if (fileType == DownloadFileService.TXT_TYPE) {
             onTxtDownload(bytes)
         }
     }
 
-    override fun downloadFailed(errorMessage: String?) {
+    override fun downloadFailed(errorMessage: String?, fileType: String) {
         AlertDialog.Builder(this).setTitle("Error")
-                .setMessage("Oops! Something went wrong.($errorMessage)")
-                .setPositiveButton(android.R.string.ok) { _, _ -> }
+                .setMessage("Oops! Something went wrong while downloading the necessary files.($errorMessage)")
+                .setPositiveButton(R.string.try_again) { _, _ ->
+                    if(fileType == DownloadFileService.KML_TYPE){
+                        getKml()
+                    }
+                    if(fileType == DownloadFileService.TXT_TYPE){
+                        getLyrics()
+                    }}
                 .setIcon(android.R.drawable.ic_dialog_alert).show()
         Log.d(TAG, errorMessage)
     }
@@ -242,11 +276,11 @@ class MapsActivity :
         markerOptions.snippet(placemark.description)
 
         when(placemark.style?.id){
-            UNCLASSIFIED -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-            BORING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
-            NOT_BORING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
-            INTERESTING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
-            VERY_INTERESTING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
+            Placemark.UNCLASSIFIED -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+            Placemark.BORING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_YELLOW))
+            Placemark.NOT_BORING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ORANGE))
+            Placemark.INTERESTING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+            Placemark.VERY_INTERESTING -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET))
             else -> markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
         }
 
@@ -568,6 +602,17 @@ class MapsActivity :
         //Move map camera
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17.7F));
     }
+
+    override fun networkAvailable() {
+        getKml()
+        getLyrics()
+        mNetworkSnackbar.dismiss()
+    }
+
+    override fun networkUnavailable() {
+        mNetworkSnackbar.show()
+    }
+
 
 }
 

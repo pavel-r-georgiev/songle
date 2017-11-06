@@ -2,6 +2,7 @@ package me.pavelgeorgiev.songle
 
 import android.content.Intent
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AppCompatActivity
 import android.text.SpannableString
 import android.text.TextUtils
@@ -12,7 +13,6 @@ import android.widget.ProgressBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.activity_login_logout.*
-import android.widget.Toast
 
 import android.util.Log
 import com.google.firebase.auth.EmailAuthProvider
@@ -135,8 +135,10 @@ class LogoutActivity : AppCompatActivity(), View.OnClickListener {
                         updateUI(user)
                     } else {
                         Log.w(TAG, "linkWithCredential:failure", task.exception)
-                        Toast.makeText(this@LogoutActivity, task.exception!!.message,
-                                Toast.LENGTH_SHORT).show()
+
+                        Snackbar.make(findViewById(R.id.login_logout_activity), task.exception!!.message.toString(),
+                                Snackbar.LENGTH_LONG)
+                                .show()
                     }
 
                     hideProgressDialog()
