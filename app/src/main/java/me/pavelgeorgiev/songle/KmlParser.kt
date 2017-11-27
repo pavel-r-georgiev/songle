@@ -29,7 +29,7 @@ class KmlParser {
     private val mStyles = HashMap<String, KmlStyle>()
 
     @Throws(XmlPullParserException::class, IOException::class)
-    fun parse(input : InputStream, context: Context): HashSet<Placemark> {
+    fun parse(input : InputStream, context: Context): HashMap<String, Placemark>  {
         mContext = context
         input.use {
             val parser = Xml.newPullParser()
@@ -43,8 +43,8 @@ class KmlParser {
     }
 
     @Throws(XmlPullParserException::class, IOException::class)
-    private fun readPlacemarks(parser: XmlPullParser): HashSet<Placemark> {
-        val placemarks = HashSet<Placemark> ()
+    private fun readPlacemarks(parser: XmlPullParser): HashMap<String, Placemark>  {
+        val placemarks = HashMap<String, Placemark> ()
 
         parser.require(XmlPullParser.START_TAG, ns, DOCUMENT_TAG)
 
@@ -56,7 +56,7 @@ class KmlParser {
             when {
                 parser.name == PLACEMARK_TAG -> {
                     val placemark = readPlacemark(parser)
-                    placemarks.add(placemark)
+                    placemarks.put(placemark.name, placemark)
                 }
                 parser.name == STYLE_TAG -> {
                     val style = readStyle(parser)
@@ -151,9 +151,8 @@ class KmlParser {
         return Placemark(
                 name,
                 description,
-                styleUrl,
                 LatLng(mapCoordinates[1], mapCoordinates[0]),
-                mStyles[styleID])
+                styleID)
     }
 
     @Throws(IOException::class, XmlPullParserException::class)

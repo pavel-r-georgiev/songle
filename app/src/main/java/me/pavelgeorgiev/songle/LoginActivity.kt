@@ -20,6 +20,8 @@ import android.text.style.UnderlineSpan
 import android.view.inputmethod.InputMethodManager
 import android.widget.ProgressBar
 import android.support.v7.app.AlertDialog
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
 
 
 /**
@@ -55,9 +57,9 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         sign_out_button.setOnClickListener(this)
         mDetailTextView.setOnClickListener(this)
 
+//      Firebase Auth client and Database
         mAuth = FirebaseAuth.getInstance()
-
-
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
     }
 
     public override fun onStart() {

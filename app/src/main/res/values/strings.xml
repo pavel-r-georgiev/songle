@@ -61,4 +61,5 @@
     <string name="link_account">Link Account</string>
     <string name="account_management_title">Link your account to save your progress.</string>
     <string name="try_again">Try again</string>
+    <string name="completed_songs">Completed Songs</string>
 </resources>

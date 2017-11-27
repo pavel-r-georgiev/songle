@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <!-- For app targets of Android 5.0 or higher -->
     <uses-feature android:name="android.hardware.location.gps" />
@@ -27,8 +27,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/SongleTheme">
-        <activity android:name=".MainActivity">
-        </activity>
+        <activity android:name=".MainActivity"></activity>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -45,10 +44,10 @@
             android:name=".MapsActivity"
             android:label="@string/title_activity_maps"
             android:screenOrientation="portrait"
-            android:windowSoftInputMode="stateHidden"></activity>
+            android:windowSoftInputMode="stateHidden" />
         <activity
             android:name=".DifficultyActivity"
-            android:label="@string/title_difficulty_activity"></activity>
+            android:label="@string/title_difficulty_activity" />
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
@@ -59,20 +58,20 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
         <activity
             android:name=".LogoutActivity"
             android:label="@string/title_activity_logout"
-            android:windowSoftInputMode="stateHidden">
-        </activity>
+            android:windowSoftInputMode="stateHidden"></activity>
 
         <receiver
-            android:name="me.pavelgeorgiev.songle.NetworkReceiver"
+            android:name=".NetworkReceiver"
             android:exported="false">
             <intent-filter>
-                <action android:name="android.net.conn.CONNECTIVITY_CHANGE"/>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
             </intent-filter>
         </receiver>
+
+        <activity android:name=".CompletedActivity"></activity>
     </application>
 
 </manifest>

@@ -1,9 +1,11 @@
 package me.pavelgeorgiev.songle
 
-import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
+import android.net.ConnectivityManager
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
@@ -11,15 +13,8 @@ import android.support.v7.widget.Toolbar
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
-import me.pavelgeorgiev.songle.R.layout.activity_main
-import android.content.IntentFilter
-import android.support.design.widget.Snackbar
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
 
-
-class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.NetworkStateReceiverListener {
+class CompletedActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.NetworkStateReceiverListener{
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mLayoutManager: RecyclerView.LayoutManager
     private lateinit var mAdapter: RecyclerView.Adapter<SongAdapter.ViewHolder>
@@ -35,7 +30,7 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         setContentView(R.layout.activity_main)
 
         mToolbar = toolbar as Toolbar
-        mToolbar.title = getString(R.string.app_name)
+        mToolbar.title = getString(R.string.completed_songs)
 
         buildDrawerNav()
         mRecyclerView = recyclerView
@@ -44,25 +39,19 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
 
         mLayoutManager = LinearLayoutManager(this)
         mRecyclerView.layoutManager = mLayoutManager
-        mAdapter = SongAdapter(mSongs, this, false)
+        mAdapter = SongAdapter(mSongs, this, true)
         mRecyclerView.adapter = mAdapter
 
         getSongs()
         mReceiver =  NetworkReceiver()
         mReceiver.addListener(this)
-        this.registerReceiver(mReceiver, IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION))
-
-        FirebaseDatabase.getInstance()
-                .reference
-                .child("users")
-                .child(FirebaseAuth.getInstance().currentUser!!.uid)
-                .keepSynced(true)
+        this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
     }
 
     private fun buildDrawerNav() {
         val item1 = PrimaryDrawerItem().
                 withIdentifier(1)
-                .withName(getString(R.string.completed_songs))
+                .withName("Completed Songs")
                 .withIcon(R.drawable.ic_library_music_black_24dp)
                 .withSelectable(false)
 
@@ -71,7 +60,7 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
                 .withOnDrawerItemClickListener(Drawer.OnDrawerItemClickListener { _, position, _ ->
                     when (position) {
                         1 -> {
-                            startActivity(Intent(this, CompletedActivity::class.java))
+                            startActivity(Intent(this, MainActivity::class.java))
                             return@OnDrawerItemClickListener true
                         }
                         else -> {
@@ -109,7 +98,7 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
     }
 
     override fun downloadFailed(errorMessage: String?, fileType: String) {
-        AlertDialog.Builder(this@MainActivity).setTitle("Download Error")
+        AlertDialog.Builder(this@CompletedActivity).setTitle("Download Error")
                 .setMessage("Failed downloading the song list.")
                 .setPositiveButton(getString(R.string.try_again)) { _, _ ->
                     if(fileType == DownloadFileService.XML_TYPE){
@@ -119,8 +108,8 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
     }
 
     override fun networkAvailable() {
-       getSongs()
-       mSnackbar?.dismiss()
+        getSongs()
+        mSnackbar?.dismiss()
     }
 
     override fun networkUnavailable() {
@@ -129,5 +118,4 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         mSnackbar = snackbar
         snackbar.show()
     }
-
 }
