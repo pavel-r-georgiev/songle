@@ -18,6 +18,7 @@
     <string name="difficulty_impossible">Impossible</string>
     <string name="intent_song_number">SONG</string>
     <string name="intent_song_map_version">MAP_VERSION</string>
+    <string name="intent_song_difficulty">SONG_DIFFICULTY</string>
     <string name="unknown">Unknown</string>
     <string name="difficulty_easy_description">All words are visible on the map.</string>
     <string name="difficulty_medium_description">The very interesting words are hidden from the map.</string>

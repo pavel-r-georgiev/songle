@@ -38,7 +38,6 @@ import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import kotlinx.android.synthetic.main.activity_maps.*
-import me.pavelgeorgiev.songle.R.drawable.header
 
 
 @Suppress("DEPRECATION")
@@ -69,13 +68,14 @@ class MapsActivity :
     private lateinit var mErrorDialog: Dialog
     private lateinit var mDatabase: DatabaseReference
     private lateinit var mUser: FirebaseUser
+    private lateinit var mDifficulty: String
     private var mLyrics = HashMap<Int, List<String>>()
     private var mCurrLocationMarker: Marker? = null
     private var mCollectedWords = HashMap<String, String>()
     private var mPlacemarks = HashMap<String, Placemark>()
 
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
-    val COLLECT_DISTANCE_THRESHOLD = 1000
+    var COLLECT_DISTANCE_THRESHOLD = 30
     val TAG = "MapsActivity"
     val LOCATION_REQUEST_INTERVAL: Long = 5000
     val LOCATION_REQUEST_FASTEST_INTERVAL: Long = 1000
@@ -99,15 +99,44 @@ class MapsActivity :
         mSongTitle = intent.getStringExtra(getString(R.string.intent_song_title))
         mSongMapVersion = intent.getStringExtra(getString(R.string.intent_song_map_version))
 
+        when(mSongMapVersion){
+            "1" ->{
+                mDifficulty = getString(R.string.difficulty_impossible)
+                COLLECT_DISTANCE_THRESHOLD = 30
+            }
+            "2" ->{
+                mDifficulty = getString(R.string.difficulty_very_hard)
+                COLLECT_DISTANCE_THRESHOLD = 45
+            }
+            "3" ->{
+                mDifficulty = getString(R.string.difficulty_hard)
+                COLLECT_DISTANCE_THRESHOLD = 60
+            }
+            "4" ->{
+                mDifficulty = getString(R.string.difficulty_medium)
+                COLLECT_DISTANCE_THRESHOLD = 75
+            }
+            "5" ->{
+                mDifficulty = getString(R.string.difficulty_easy)
+                COLLECT_DISTANCE_THRESHOLD = 100
+            }
+        }
+
         val baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
         val mapVersion = "map$mSongMapVersion.kml"
         kmlUrl = "$baseUrl/$mapVersion"
         lyricsUrl = "$baseUrl/words.txt"
 
         mUser = FirebaseAuth.getInstance().currentUser!!
-        mDatabase = FirebaseDatabase.getInstance().reference
+        mDatabase = FirebaseDatabase
+                .getInstance()
+                .reference
+                .child("users")
+                .child(mUser!!.uid)
+                .child("progress")
+                .child("$mSongNumber-$mSongMapVersion")
 
-        getPlacemarks()
+        getProgress()
         getLyrics()
 
         mReceiver =  NetworkReceiver()
@@ -177,19 +206,21 @@ class MapsActivity :
         }
     }
 
-    private fun getPlacemarks() {
-        mDatabase.child("users")
-                .child(mUser!!.uid)
-                .child("progress")
-                .child("$mSongNumber-$mSongMapVersion")
-                .addValueEventListener(object: ValueEventListener {
+    private fun getProgress() {
+        mDatabase.addValueEventListener(object: ValueEventListener {
                     override fun onCancelled(databaseError: DatabaseError?) {
                         Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException());
                     }
 
                     override fun onDataChange(snapshot: DataSnapshot) {
                         if (snapshot.exists()) {
-                            for(entry in snapshot.children){
+                            for(word in snapshot.child("words").children){
+                                mCollectedWords.put(word.key, word.value as String)
+                            }
+
+                            sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
+
+                            for(entry in snapshot.child("markers").children){
                                 val marker = Placemark.build(entry.value as HashMap<String, Any>)
                                 mPlacemarks.put(marker.name, marker)
                                 createMarker(marker, marker.location)
@@ -200,7 +231,6 @@ class MapsActivity :
                         }
                     }
                 })
-
     }
 
 
@@ -329,7 +359,7 @@ class MapsActivity :
         mMap.addMarker(markerOptions)
 
     }
-    
+
     private fun onMarkerClick(marker: Marker): Boolean {
         if(marker == null || marker.title == "Current Position" || mCurrLocationMarker == null){
             return false
@@ -570,7 +600,10 @@ class MapsActivity :
                     .setTitle("Success!")
                     .setMessage("Congratulations you guessed the song.")
                     .setNeutralButton("New Song", { _, _ ->
-                        startActivity(Intent(this, MainActivity::class.java))
+                        val intent = Intent(this, MainActivity::class.java)
+                        intent.putExtra(getString(R.string.intent_song_title), mSongTitle)
+                        intent.putExtra(getString(R.string.intent_song_difficulty), mDifficulty)
+                        startActivity(intent)
                     })
                     .create()
         } else {
@@ -609,7 +642,9 @@ class MapsActivity :
      }
 
     private fun saveProgress(){
-        mDatabase.child("users").child(mUser.uid).child("progress").child("$mSongNumber-$mSongMapVersion").setValue(mPlacemarks.values.toList())
+        mDatabase.child("markers").setValue(mPlacemarks.values.toList())
+
+        mDatabase.child("words").setValue(mCollectedWords)
     }
 
     private fun buildWordsCollectedString(size: Int) : String{
@@ -651,7 +686,7 @@ class MapsActivity :
     }
 
     override fun networkAvailable() {
-        getPlacemarks()
+        getProgress()
         getLyrics()
         mNetworkSnackbar.dismiss()
     }

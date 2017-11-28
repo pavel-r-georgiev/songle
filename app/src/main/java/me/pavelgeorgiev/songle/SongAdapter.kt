@@ -1,5 +1,4 @@
 package me.pavelgeorgiev.songle
-import me.pavelgeorgiev.songle.R
 import android.content.Context
 import android.content.Intent
 import android.support.v7.widget.RecyclerView
@@ -8,21 +7,15 @@ import android.view.View
 import android.view.ViewGroup
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.song_list_item.view.*
-import android.R.attr.radius
 import com.squareup.picasso.Callback
 import jp.wasabeef.picasso.transformations.BlurTransformation
 import kotlinx.android.synthetic.main.song_list_item_completed.view.*
-import me.pavelgeorgiev.songle.R.id.recyclerView
-import android.support.v4.view.ViewCompat.setActivated
-import android.transition.TransitionManager
 import android.widget.RelativeLayout
-import android.widget.Toast
 
 
 
 
-class SongAdapter (private val songs: List<Song>, private val context: Context, private val interactive: Boolean)
-
+class SongAdapter (private val songs: MutableCollection<Song>, private val context: Context, private val interactive: Boolean, private val completedSongs: HashMap<String, Song> = HashMap())
     : RecyclerView.Adapter<SongAdapter.ViewHolder>(){
     private var mExpandedPosition = -1
     override fun getItemCount() = songs.size
@@ -37,15 +30,20 @@ class SongAdapter (private val songs: List<Song>, private val context: Context, 
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val song = songs[position]
+        val songsArray = ArrayList<Song>(songs)
+        val song = songsArray[position]
 //     Create intent to go to Map activity
         val intent = Intent(holder.cv.context, DifficultyActivity::class.java)
 //     Put number of song. Used to load corresponding words on map
         intent.putExtra(context.getString(R.string.intent_song_number), song.number)
         intent.putExtra(context.getString(R.string.intent_song_title), song.title)
 
+        if(completedSongs.containsKey(song.title) && completedSongs[song.title] == song){
+            song.completed = true
+        }
+
         holder.artist.text = song.artist
-        holder.title.text = if(interactive || Math.random() > 0.5) song.title else context.getString(R.string.unknown)
+        holder.title.text = if(interactive || song.completed) song.title else context.getString(R.string.unknown)
 //        holder.link.text = if(holder.title.text != context.getString(R.string.unknown)) song.link else ""
 
         val youtubeLink = song.link.trim().split("/")
@@ -54,7 +52,8 @@ class SongAdapter (private val songs: List<Song>, private val context: Context, 
         val imageUrlNormal = "$imageUrlBase/0.jpg"
         val picasso = Picasso.with(context).load(imageUrlHighRes).error(R.drawable.placeholder_song_image)
 
-        if(holder.title.text == context.getString(R.string.unknown)){
+//        Needed?
+        if(!song.completed){
             picasso.transform(BlurTransformation(context, 25, 5))
         }
 

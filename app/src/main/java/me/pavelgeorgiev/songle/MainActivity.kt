@@ -1,6 +1,5 @@
 package me.pavelgeorgiev.songle
 
-import android.content.Context
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -11,12 +10,13 @@ import android.support.v7.widget.Toolbar
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
-import me.pavelgeorgiev.songle.R.layout.activity_main
 import android.content.IntentFilter
 import android.support.design.widget.Snackbar
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
+
+
 
 
 class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.NetworkStateReceiverListener {
@@ -27,8 +27,15 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
     private lateinit var mToolbar: Toolbar
     private lateinit var mReceiver: NetworkReceiver
     private var mSnackbar: Snackbar? = null
-    private var mSongs = mutableListOf<Song>()
-
+    private var mSongs = LinkedHashMap<String, Song>()
+    private var mCompletedSongs = HashMap<String, Song>()
+    private val mDatabase = FirebaseDatabase.getInstance()
+            .reference
+            .child("users")
+            .child(FirebaseAuth.getInstance().currentUser!!.uid)
+    private val TAG = "MainActivity"
+    private var mGuessedSongTitle: String? = null
+    private var mGuessedSongDifficulty: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,19 +51,36 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
 
         mLayoutManager = LinearLayoutManager(this)
         mRecyclerView.layoutManager = mLayoutManager
-        mAdapter = SongAdapter(mSongs, this, false)
+        mAdapter = SongAdapter(mSongs.values, this, false, mCompletedSongs)
         mRecyclerView.adapter = mAdapter
 
-        getSongs()
         mReceiver =  NetworkReceiver()
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION))
 
-        FirebaseDatabase.getInstance()
-                .reference
-                .child("users")
-                .child(FirebaseAuth.getInstance().currentUser!!.uid)
-                .keepSynced(true)
+        mDatabase.keepSynced(true)
+
+        mGuessedSongTitle = intent.getStringExtra(getString(R.string.intent_song_title))
+        mGuessedSongDifficulty  = intent.getStringExtra(getString(R.string.intent_song_difficulty))
+
+        getSongList()
+    }
+
+    private fun getSongList() {
+        mDatabase.child("completed-songs").addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(databaseError: DatabaseError?) {
+                Log.w(TAG, "loadCompletedSongs:onCancelled", databaseError?.toException())
+            }
+
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    for (song in snapshot.children) {
+                        mCompletedSongs.put(song.key, Song(song.value as HashMap<String, Any>))
+                    }
+                }
+            }
+        })
+        getSongs()
     }
 
     private fun buildDrawerNav() {
@@ -104,8 +128,22 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
     override fun downloadComplete(result: ByteArray, fileType: String) {
         val result = SongsXmlParser().parse(result.inputStream())
         mSongs.clear()
-        mSongs.addAll(result)
+        result.forEach({ mSongs.put(it.title, it) })
+        markCompletedSong()
         mAdapter.notifyDataSetChanged()
+    }
+
+    private fun markCompletedSong() {
+        if(mGuessedSongTitle != null && mGuessedSongDifficulty != null){
+            val song = mSongs[mGuessedSongTitle as String]!!
+            song.completed = true
+            song.addCompletedDifficulty(mGuessedSongDifficulty as String)
+            mCompletedSongs.put(song.title, song)
+            val dbReference = mDatabase.child("completed-songs")
+            val childUpdates = mutableMapOf<String, Song>()
+            childUpdates[song.title] = song
+            dbReference.updateChildren(childUpdates as Map<String, Any>?)
+        }
     }
 
     override fun downloadFailed(errorMessage: String?, fileType: String) {

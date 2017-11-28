@@ -1,10 +1,17 @@
 package me.pavelgeorgiev.songle
 
+import android.util.Log
 import android.util.Xml
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import java.io.InputStream
+import java.util.HashMap
 
 class SongsXmlParser {
 //    We don't use namespace
@@ -15,6 +22,8 @@ class SongsXmlParser {
     private val ARTIST_TAG = "Artist"
     private val TITLE_TAG = "Title"
     private val LINK_TAG = "Link"
+    private val TIMESTAMP_TAG = "timestamp"
+    private val TAG = "SongXmlParser"
 
     @Throws(XmlPullParserException::class, IOException::class)
     fun parse(input : InputStream): List<Song> {
@@ -32,18 +41,49 @@ class SongsXmlParser {
         val songs = ArrayList<Song>()
 
         parser.require(XmlPullParser.START_TAG, ns, SONGS_TAG)
+        var timestamp: String
+        val dbReference =  FirebaseDatabase.getInstance()
+                .reference
+                .child("users")
+                .child(FirebaseAuth.getInstance().currentUser!!.uid)
+
+        if(parser.name == SONGS_TAG){
+            timestamp = parser.getAttributeValue(null, TIMESTAMP_TAG)
+
+
+//          Check if database timestamp is same
+            dbReference.addValueEventListener(object: ValueEventListener {
+                        override fun onCancelled(databaseError: DatabaseError?) {
+                            Log.w(TAG, "loadTimestamp:onCancelled", databaseError?.toException());
+                        }
+
+                        override fun onDataChange(snapshot: DataSnapshot) {
+                            if (snapshot.exists() && snapshot.child("last-updated").value == timestamp) {
+                                    snapshot.child("song-list").children.mapTo(songs) { Song(it.value as HashMap<String, Any>) }
+                                } else {
+                                    dbReference.child("last-updated").setValue(timestamp)
+                                }
+                        }
+                    })
+        }
+
+        if(!songs.isEmpty()){
+            return songs
+        }
 
         while(parser.next() != XmlPullParser.END_TAG) {
             if(parser.eventType != XmlPullParser.START_TAG) {
                 continue
             }
 
-            if(parser.name == SONG_TAG){
-                songs.add(readSong(parser))
-            } else {
-                skip(parser)
+            when(parser.name){
+                SONG_TAG -> songs.add(readSong(parser))
+                else -> skip(parser)
             }
+
         }
+
+        dbReference.child("song-list").setValue(songs.toList())
         return songs
     }
 
