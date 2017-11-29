@@ -93,5 +93,10 @@ class CommonFunctions {
 
             return mDrawerBuilder
             }
+
+        fun dpToPx(dp: Int, context: Context): Int {
+            val density = context.resources.displayMetrics.density
+            return Math.round(dp.toFloat() * density)
+        }
         }
 }

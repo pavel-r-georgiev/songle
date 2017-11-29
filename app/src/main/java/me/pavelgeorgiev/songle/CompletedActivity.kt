@@ -10,11 +10,14 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
+import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
 
-class CompletedActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.NetworkStateReceiverListener{
+class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateReceiverListener{
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mLayoutManager: RecyclerView.LayoutManager
     private lateinit var mAdapter: RecyclerView.Adapter<SongAdapter.ViewHolder>
@@ -22,8 +25,9 @@ class CompletedActivity : AppCompatActivity(), DownloadFileCallback, NetworkRece
     private lateinit var mToolbar: Toolbar
     private lateinit var mReceiver: NetworkReceiver
     private var mSnackbar: Snackbar? = null
-    private var mSongs = mutableListOf<Song>()
-
+    private var mCompletedSongs = mutableListOf<Song>()
+    private lateinit var mDatabase: DatabaseReference
+    private val TAG = "CompletedActivity"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,10 +43,16 @@ class CompletedActivity : AppCompatActivity(), DownloadFileCallback, NetworkRece
 
         mLayoutManager = LinearLayoutManager(this)
         mRecyclerView.layoutManager = mLayoutManager
-        mAdapter = SongAdapter(mSongs, this, true)
+        mAdapter = SongAdapter(mCompletedSongs, this, true)
         mRecyclerView.adapter = mAdapter
 
-        getSongs()
+        mDatabase = FirebaseDatabase
+                .getInstance()
+                .reference
+                .child("users")
+                .child(FirebaseAuth.getInstance().uid)
+
+        getCompletedSongs()
         mReceiver =  NetworkReceiver()
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
@@ -51,7 +61,7 @@ class CompletedActivity : AppCompatActivity(), DownloadFileCallback, NetworkRece
     private fun buildDrawerNav() {
         val item1 = PrimaryDrawerItem().
                 withIdentifier(1)
-                .withName("Completed Songs")
+                .withName("All Songs")
                 .withIcon(R.drawable.ic_library_music_black_24dp)
                 .withSelectable(false)
 
@@ -78,37 +88,34 @@ class CompletedActivity : AppCompatActivity(), DownloadFileCallback, NetworkRece
         this.unregisterReceiver(mReceiver)
     }
 
-    private fun getSongs() {
-        if (NetworkReceiver.isNetworkConnected(this)) {
-            DownloadFileService(this, DownloadFileService.XML_TYPE).execute(getString(R.string.songs_xml_url))
-        } else {
+    private fun getCompletedSongs() {
+        if (!NetworkReceiver.isNetworkConnected(this)) {
             AlertDialog.Builder(this).setTitle("No Internet Connection")
                     .setMessage("Songle requires Internet connection. Please connect to continue.")
                     .setPositiveButton(android.R.string.ok) { _, _ -> }
                     .show()
         }
-    }
 
+        mDatabase.child("completed-songs").addValueEventListener(object : ValueEventListener {
+            override fun onCancelled(databaseError: DatabaseError?) {
+                Log.w(TAG, "loadCompletedSongs:onCancelled", databaseError?.toException())
+            }
 
-    override fun downloadComplete(result: ByteArray, fileType: String) {
-        val result = SongsXmlParser().parse(result.inputStream())
-        mSongs.clear()
-        mSongs.addAll(result)
+            override fun onDataChange(snapshot: DataSnapshot) {
+                mCompletedSongs.clear()
+                if (snapshot.exists()) {
+                    for (song in snapshot.children) {
+                        mCompletedSongs.add(Song(song.value as HashMap<String, Any>))
+                    }
+                }
+            }
+        })
         mAdapter.notifyDataSetChanged()
     }
 
-    override fun downloadFailed(errorMessage: String?, fileType: String) {
-        AlertDialog.Builder(this@CompletedActivity).setTitle("Download Error")
-                .setMessage("Failed downloading the song list.")
-                .setPositiveButton(getString(R.string.try_again)) { _, _ ->
-                    if(fileType == DownloadFileService.XML_TYPE){
-                        getSongs()
-                    }
-                }.show()
-    }
 
     override fun networkAvailable() {
-        getSongs()
+        getCompletedSongs()
         mSnackbar?.dismiss()
     }
 

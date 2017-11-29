@@ -2,6 +2,8 @@ package me.pavelgeorgiev.songle
 import android.content.Context
 import android.content.Intent
 import android.support.v7.widget.RecyclerView
+import android.transition.TransitionManager
+import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,9 +19,8 @@ import android.widget.RelativeLayout
 
 class SongAdapter (private val songs: MutableCollection<Song>, private val context: Context, private val interactive: Boolean, private val completedSongs: HashMap<String, Song> = HashMap())
     : RecyclerView.Adapter<SongAdapter.ViewHolder>(){
-    private var mExpandedPosition = -1
     override fun getItemCount() = songs.size
-
+    private var mExpandedPosition = -1
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val layoutInflater = LayoutInflater.from(parent.context)
@@ -42,42 +43,62 @@ class SongAdapter (private val songs: MutableCollection<Song>, private val conte
             song.completed = true
         }
 
+        val songCompleted = song.completed || completedSongs.containsKey(song.title)
         holder.artist.text = song.artist
-        holder.title.text = if(interactive || song.completed) song.title else context.getString(R.string.unknown)
+        holder.title.text = if(songCompleted) song.title else context.getString(R.string.unknown)
 //        holder.link.text = if(holder.title.text != context.getString(R.string.unknown)) song.link else ""
 
         val youtubeLink = song.link.trim().split("/")
         val imageUrlBase = "http://img.youtube.com/vi/${youtubeLink.last()}"
         val imageUrlHighRes = "$imageUrlBase/maxresdefault.jpg"
         val imageUrlNormal = "$imageUrlBase/0.jpg"
-        val picasso = Picasso.with(context).load(imageUrlHighRes).error(R.drawable.placeholder_song_image)
+        val picasso = Picasso.with(context).load(imageUrlNormal).error(R.drawable.placeholder_song_image).noPlaceholder()
 
-//        Needed?
-        if(!song.completed){
-            picasso.transform(BlurTransformation(context, 25, 5))
+        if(!songCompleted){
+            picasso.transform(BlurTransformation(context, 20, 5))
         }
 
         picasso.into(holder.image, object: Callback{
-            override fun onSuccess() {}
-            override fun onError() {
-                val picasso = Picasso.with(context).load(imageUrlNormal)
-                if(holder.title.text == context.getString(R.string.unknown)){
-                    picasso.transform(BlurTransformation(context, 15, 5))
+            override fun onSuccess() {
+                val picasso = Picasso.with(context).load(imageUrlHighRes).noPlaceholder()
+                if(!songCompleted){
+                    picasso.transform(BlurTransformation(context, 20, 5))
                 }
+
                 picasso.into(holder.image)
             }
+            override fun onError() {}
         })
 
 
+
+
         if(interactive){
-            holder.arrow?.setOnClickListener({
-                holder.expand_area?.visibility = View.VISIBLE
-                holder.arrow.setImageResource(R.drawable.arrow_drop_up_black)
-                holder.image.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 360)
-                val params =  RelativeLayout.LayoutParams(
+            var isExpanded = position == mExpandedPosition
+
+            var params: RelativeLayout.LayoutParams
+            if(isExpanded) {
+                params = RelativeLayout.LayoutParams(
                         RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT)
                 params.addRule(RelativeLayout.BELOW, holder.image.id)
-                holder.text.layoutParams = params
+                holder.image.layoutParams = RelativeLayout.LayoutParams(RelativeLayout.LayoutParams.MATCH_PARENT, 360)
+                holder.arrow!!.setImageResource(R.drawable.arrow_drop_up_black)
+            } else {
+                holder.arrow!!.setImageResource(R.drawable.arrow_drop_down_black)
+                holder.image.layoutParams = RelativeLayout.LayoutParams(CommonFunctions.dpToPx(100, context), CommonFunctions.dpToPx(100, context))
+                params = RelativeLayout.LayoutParams(
+                        RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT)
+                params.addRule(RelativeLayout.RIGHT_OF, holder.image.id)
+                holder.expand_area?.isEnabled = false
+            }
+
+            holder.text.layoutParams = params
+            holder.expand_area?.visibility = if(!isExpanded) View.GONE else View.VISIBLE
+
+            holder.layout.setOnClickListener({
+                mExpandedPosition = if(isExpanded) -1 else position
+                TransitionManager.beginDelayedTransition(holder.cv)
+                notifyDataSetChanged()
             })
         } else {
             holder.cv.setOnClickListener({ holder.cv.context.startActivity(intent) })
@@ -93,5 +114,6 @@ class SongAdapter (private val songs: MutableCollection<Song>, private val conte
         val image = if(interactive) view.song_image_completed else view.song_image
         val arrow = if(interactive) view.expand_arrow else null
         val expand_area = if(interactive) view.expand_area else null
+        val layout = if(interactive) view.song_completed_layout else view.song_layout
     }
 }

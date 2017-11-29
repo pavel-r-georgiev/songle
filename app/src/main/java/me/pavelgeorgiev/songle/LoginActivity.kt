@@ -39,6 +39,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var  mEmailField: EditText
     private lateinit var  mPasswordField: EditText
     private lateinit var mProgressBar: ProgressBar
+    private val mDatabase =  FirebaseDatabase.getInstance()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +60,6 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
 
 //      Firebase Auth client and Database
         mAuth = FirebaseAuth.getInstance()
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
     }
 
     public override fun onStart() {
@@ -225,6 +225,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         if (user != null) {
             hideSoftKeyboard(mStatusTextView)
             val intent = Intent(this, MainActivity::class.java)
+            mDatabase.reference.child("users").child(user.uid).keepSynced(true)
             startActivity(intent)
             finish()
         } else {

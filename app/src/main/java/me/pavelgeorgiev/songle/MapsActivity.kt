@@ -262,7 +262,7 @@ class MapsActivity :
 
         // Add ”My location” button to the user interface
         mMap.uiSettings.isMyLocationButtonEnabled = true
-
+        getProgress()
     }
 
     /**
@@ -337,6 +337,7 @@ class MapsActivity :
         } else {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLastPlacemarkLocation,17.7F))
         }
+        saveProgress()
     }
 
     private fun createMarker(placemark: Placemark, location: LatLng){

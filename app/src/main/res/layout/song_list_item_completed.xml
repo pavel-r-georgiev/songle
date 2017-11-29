@@ -16,6 +16,7 @@
         android:outlineProvider="bounds">
 
         <RelativeLayout
+            android:id="@+id/song_completed_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 

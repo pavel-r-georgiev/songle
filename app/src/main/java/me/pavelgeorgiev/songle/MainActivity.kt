@@ -58,8 +58,6 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION))
 
-        mDatabase.keepSynced(true)
-
         mGuessedSongTitle = intent.getStringExtra(getString(R.string.intent_song_title))
         mGuessedSongDifficulty  = intent.getStringExtra(getString(R.string.intent_song_difficulty))
 
@@ -117,6 +115,7 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         if (NetworkReceiver.isNetworkConnected(this)) {
             DownloadFileService(this, DownloadFileService.XML_TYPE).execute(getString(R.string.songs_xml_url))
         } else {
+            getSongsFromDatabase()
             AlertDialog.Builder(this).setTitle("No Internet Connection")
                     .setMessage("Songle requires Internet connection. Please connect to continue.")
                     .setPositiveButton(android.R.string.ok) { _, _ -> }
@@ -154,6 +153,25 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
                         getSongs()
                     }
                 }.show()
+    }
+
+    fun getSongsFromDatabase(){
+        mDatabase.addValueEventListener(object: ValueEventListener {
+            override fun onCancelled(databaseError: DatabaseError?) {
+                Log.w(TAG, "loadTimestamp:onCancelled", databaseError?.toException());
+            }
+
+            override fun onDataChange(snapshot: DataSnapshot) {
+                if (snapshot.exists()) {
+                    snapshot
+                            .child("song-list")
+                            .children
+                            .map({ Song(it.value as java.util.HashMap<String, Any>) })
+                            .forEach({mSongs.put(it.title, it)})
+                }
+            }
+        })
+        mAdapter.notifyDataSetChanged()
     }
 
     override fun networkAvailable() {
