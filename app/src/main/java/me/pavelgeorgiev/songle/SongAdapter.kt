@@ -95,9 +95,10 @@ class SongAdapter (private val songs: MutableCollection<Song>, private val conte
             holder.text.layoutParams = params
             holder.expand_area?.visibility = if(!isExpanded) View.GONE else View.VISIBLE
 
+            holder.layout.isActivated = isExpanded
             holder.layout.setOnClickListener({
                 mExpandedPosition = if(isExpanded) -1 else position
-                TransitionManager.beginDelayedTransition(holder.cv)
+                TransitionManager.beginDelayedTransition(holder.layout)
                 notifyDataSetChanged()
             })
         } else {

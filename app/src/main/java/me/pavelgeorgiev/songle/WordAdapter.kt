@@ -32,8 +32,8 @@ class WordAdapter(private val mData: HashMap<String, String>, private val mConte
 
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
-        val word = mKeys.elementAt(position)
-        val location = getItem(position).toString()
+        val word = getItem(position).toString()
+        val location = mKeys.elementAt(position)
             val view: View?
             val vh: ListRowHolder
             if (convertView == null) {

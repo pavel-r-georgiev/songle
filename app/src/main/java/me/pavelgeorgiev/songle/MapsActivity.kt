@@ -69,7 +69,7 @@ class MapsActivity :
     private lateinit var mDatabase: DatabaseReference
     private lateinit var mUser: FirebaseUser
     private lateinit var mDifficulty: String
-    private var mLyrics = HashMap<Int, List<String>>()
+    private var mLyrics = HashMap<String, List<String>>()
     private var mCurrLocationMarker: Marker? = null
     private var mCollectedWords = HashMap<String, String>()
     private var mPlacemarks = HashMap<String, Placemark>()
@@ -136,9 +136,6 @@ class MapsActivity :
                 .child("progress")
                 .child("$mSongNumber-$mSongMapVersion")
 
-        getProgress()
-        getLyrics()
-
         mReceiver =  NetworkReceiver()
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
@@ -181,7 +178,6 @@ class MapsActivity :
         if (mGoogleApiClient != null && mGoogleApiClient.isConnected) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
-        saveProgress()
         unregisterReceiver(mReceiver)
     }
 
@@ -196,6 +192,24 @@ class MapsActivity :
         }
     }
 
+    private fun getLyricsFromDatabase(){
+        mDatabase.addListenerForSingleValueEvent(object: ValueEventListener {
+            override fun onCancelled(databaseError: DatabaseError?) {
+                Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException());
+            }
+
+            override fun onDataChange(snapshot: DataSnapshot) {
+                mPlacemarks.clear()
+                if (snapshot.exists() && snapshot.child("lyrics").exists()) {
+                    for(line in snapshot.child("lyrics").children){
+                        mLyrics.put(line.key, line.value as List<String>)
+                    }
+                } else {
+                    getLyrics()
+                }
+            }
+        })
+    }
     private fun getLyrics() {
         if (NetworkReceiver.isNetworkConnected(this)) {
             DownloadFileService(this, DownloadFileService.TXT_TYPE).execute(lyricsUrl)
@@ -207,7 +221,7 @@ class MapsActivity :
     }
 
     private fun getProgress() {
-        mDatabase.addValueEventListener(object: ValueEventListener {
+        mDatabase.addListenerForSingleValueEvent(object: ValueEventListener {
                     override fun onCancelled(databaseError: DatabaseError?) {
                         Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException());
                     }
@@ -262,11 +276,10 @@ class MapsActivity :
 
         // Add ”My location” button to the user interface
         mMap.uiSettings.isMyLocationButtonEnabled = true
-        getProgress()
     }
 
     /**
-     * Invoked after KML file has been downloaded. Loads KML layout on the map.
+     * Invoked after file has been downloaded. Loads KML layout on the map.
      */
     @Throws(XmlPullParserException::class, IOException::class)
     override fun downloadComplete(bytes: ByteArray, fileType: String) {
@@ -301,6 +314,7 @@ class MapsActivity :
             }
         }
         inputStream.close()
+        mDatabase.child("lyrics").setValue(mLyrics)
     }
 
     private fun parseLine(line: String) {
@@ -318,7 +332,7 @@ class MapsActivity :
         }
 
         val lineWords = lineList.subList(1, lineList.size)
-        mLyrics.put(lineNumber, lineWords)
+        mLyrics.put(lineNumber.toString(), lineWords)
     }
 
     private fun onKmlDownload(bytes: ByteArray) {
@@ -333,9 +347,9 @@ class MapsActivity :
         mMap.setOnMarkerClickListener { onMarkerClick(it) }
 
         if(mCurrLocationMarker != null){
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrLocationMarker!!.position, 17.7F))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrLocationMarker!!.position, 18F))
         } else {
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLastPlacemarkLocation,17.7F))
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLastPlacemarkLocation,18F))
         }
         saveProgress()
     }
@@ -373,7 +387,7 @@ class MapsActivity :
         }
 
         val wordCoord = marker.title.split(":").map { it.toInt() }
-        val line = wordCoord[0]
+        val line = wordCoord[0].toString()
         val word = wordCoord[1] - 1
 
 
@@ -381,8 +395,8 @@ class MapsActivity :
         Log.i("Marker click", "Marker clicked: " + marker.title)
         val locationInText = "Line: $line, position: ${wordCoord[1]}"
 
-
-        collectWord(mLyrics[line]?.get(word), locationInText)
+        collectWord(mLyrics[line]?.get(word), marker.title)
+        mDatabase.child("markers").child(marker.title).removeValue()
         mPlacemarks.remove(marker.title)
         marker.remove()
 
@@ -637,14 +651,18 @@ class MapsActivity :
              return
          }
 
-         mCollectedWords.put(word, location)
+         val dbReference = mDatabase.child("words")
+         val childUpdates = mutableMapOf<String, String>()
+         childUpdates[location] = word
+         dbReference.updateChildren(childUpdates as Map<String, String>)
+
+         mCollectedWords.put(location, word)
          sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
          mWordsAdapter.notifyDataSetChanged()
      }
 
     private fun saveProgress(){
-        mDatabase.child("markers").setValue(mPlacemarks.values.toList())
-
+        mDatabase.child("markers").setValue(mPlacemarks)
         mDatabase.child("words").setValue(mCollectedWords)
     }
 
@@ -687,15 +705,24 @@ class MapsActivity :
     }
 
     override fun networkAvailable() {
-        getProgress()
-        getLyrics()
+        getSongData()
         mNetworkSnackbar.dismiss()
     }
 
     override fun networkUnavailable() {
+        println(mPlacemarks.isEmpty())
+        getSongData()
         mNetworkSnackbar.show()
     }
 
 
+    private fun getSongData() {
+        if (mPlacemarks.isEmpty()) {
+            getProgress()
+        }
+        if (mLyrics.isEmpty()) {
+            getLyricsFromDatabase()
+        }
+    }
 }
 

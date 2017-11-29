@@ -60,11 +60,9 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
 
         mGuessedSongTitle = intent.getStringExtra(getString(R.string.intent_song_title))
         mGuessedSongDifficulty  = intent.getStringExtra(getString(R.string.intent_song_difficulty))
-
-        getSongList()
     }
 
-    private fun getSongList() {
+    private fun getCompletedSongs() {
         mDatabase.child("completed-songs").addValueEventListener(object : ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
                 Log.w(TAG, "loadCompletedSongs:onCancelled", databaseError?.toException())
@@ -78,7 +76,6 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
                 }
             }
         })
-        getSongs()
     }
 
     private fun buildDrawerNav() {
@@ -112,6 +109,7 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
     }
 
     private fun getSongs() {
+        getCompletedSongs()
         if (NetworkReceiver.isNetworkConnected(this)) {
             DownloadFileService(this, DownloadFileService.XML_TYPE).execute(getString(R.string.songs_xml_url))
         } else {
@@ -175,11 +173,17 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
     }
 
     override fun networkAvailable() {
-       getSongs()
+        if(mSongs.isEmpty()){
+            getSongs()
+        } else {
+            mAdapter.notifyDataSetChanged()
+        }
+
        mSnackbar?.dismiss()
     }
 
     override fun networkUnavailable() {
+        getSongs()
         val snackbar = Snackbar.make(findViewById(R.id.layout_main), "Network status: OFFLINE",
                 Snackbar.LENGTH_INDEFINITE)
         mSnackbar = snackbar
