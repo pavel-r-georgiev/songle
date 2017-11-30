@@ -12,6 +12,7 @@ class DifficultyActivity : AppCompatActivity(){
     private lateinit var mSongNumber: String
     private lateinit var mSongTitle: String
     private lateinit var mDifficultiesList: ListView
+    private lateinit var mSong: Song
 
 //    Map versions depending on the difficulty
     private val EASY = "5"
@@ -24,11 +25,12 @@ class DifficultyActivity : AppCompatActivity(){
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_difficulty)
 
-        mSongNumber = intent.getStringExtra(getString(R.string.intent_song_number))
-        mSongTitle = intent.getStringExtra(getString(R.string.intent_song_title))
+        mSong = intent.getParcelableExtra(getString(R.string.intent_song_object))
+        mSongNumber = mSong.number
+        mSongTitle = mSong.title
 
         val difficulties = constructDifficulties(mSongNumber, mSongTitle)
-        val adapter = DifficultyAdapter(this, R.layout.difficulty_list_item, difficulties)
+        val adapter = DifficultyAdapter(this, R.layout.difficulty_list_item, difficulties, mSong)
         mDifficultiesList = difficulties_list as ListView
         mDifficultiesList.adapter = adapter
 
@@ -39,41 +41,33 @@ class DifficultyActivity : AppCompatActivity(){
                 getString(R.string.difficulty_easy),
                 getString(R.string.difficulty_easy_description),
                 EASY,
-                R.drawable.easy,
-                songNumber,
-                songTitle)
+                R.drawable.easy)
 
         val medium = Difficulty(
                 getString(R.string.difficulty_medium),
                 getString(R.string.difficulty_medium_description),
                 MEDIUM,
-                R.drawable.medium,
-                songNumber,
-                songTitle)
+                R.drawable.medium)
 
         val hard = Difficulty(
                 getString(R.string.difficulty_hard),
                 getString(R.string.difficulty_hard_description),
                 HARD,
-                R.drawable.hard,
-                songNumber,
-                songTitle)
+                R.drawable.hard)
+
 
         val veryHard = Difficulty(
                 getString(R.string.difficulty_very_hard),
                 getString(R.string.difficulty_very_hard_description),
                 VERY_HARD,
-                R.drawable.very_hard,
-                songNumber,
-                songTitle)
+                R.drawable.very_hard)
 
         val impossible = Difficulty(
                 getString(R.string.difficulty_impossible),
                 getString(R.string.difficulty_impossible_description),
                 IMPOSSIBLE,
-                R.drawable.impossible,
-                songNumber,
-                songTitle)
+                R.drawable.impossible)
+
 
         return listOf(easy, medium, hard, veryHard, impossible)
     }

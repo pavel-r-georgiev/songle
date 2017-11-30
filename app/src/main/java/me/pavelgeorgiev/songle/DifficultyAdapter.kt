@@ -12,7 +12,11 @@ import android.widget.TextView
 import kotlinx.android.synthetic.main.difficulty_list_item.view.*
 
 
-class DifficultyAdapter(context: Context, resource: Int, private val difficulties: List<Difficulty>) : ArrayAdapter<Difficulty>(context, resource, difficulties) {
+class DifficultyAdapter(context: Context,
+                        resource: Int,
+                        private val difficulties: List<Difficulty>,
+                        private val song: Song)
+    :ArrayAdapter<Difficulty>(context, resource, difficulties) {
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View? {
         val difficulty = difficulties.elementAt(position)
@@ -33,16 +37,15 @@ class DifficultyAdapter(context: Context, resource: Int, private val difficultie
         vh.description.text = difficulty.description
         vh.icon.setImageResource(difficulty.iconResource)
 
-        vh.layout.setOnClickListener({onDifficultyClick(difficulty.mapVersion, difficulty.songNumber, difficulty.songTitle)})
+        vh.layout.setOnClickListener({onDifficultyClick(difficulty.mapVersion)})
 
         return view
     }
 
-    private fun onDifficultyClick(mapVersion: String, songNumber: String, songTitle: String){
+    private fun onDifficultyClick(mapVersion: String){
         val intent = Intent(context, MapsActivity::class.java)
         intent.putExtra(context.getString(R.string.intent_song_map_version), mapVersion)
-        intent.putExtra(context.getString(R.string.intent_song_number), songNumber)
-        intent.putExtra(context.getString(R.string.intent_song_title), songTitle)
+        intent.putExtra(context.getString(R.string.intent_song_object), song)
         context.startActivity(intent)
     }
 

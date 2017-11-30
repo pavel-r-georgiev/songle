@@ -43,7 +43,7 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
 
         mLayoutManager = LinearLayoutManager(this)
         mRecyclerView.layoutManager = mLayoutManager
-        mAdapter = SongAdapter(mCompletedSongs, this, true)
+        mAdapter = SongAdapter(mCompletedSongs, this, true, recyclerView = recyclerView)
         mRecyclerView.adapter = mAdapter
 
         mDatabase = FirebaseDatabase
@@ -52,10 +52,10 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
                 .child("users")
                 .child(FirebaseAuth.getInstance().uid)
 
-        getCompletedSongs()
         mReceiver =  NetworkReceiver()
         mReceiver.addListener(this)
-        this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+        getCompletedSongs()
     }
 
     private fun buildDrawerNav() {
@@ -91,12 +91,12 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
     private fun getCompletedSongs() {
         if (!NetworkReceiver.isNetworkConnected(this)) {
             AlertDialog.Builder(this).setTitle("No Internet Connection")
-                    .setMessage("Songle requires Internet connection. Please connect to continue.")
+                    .setMessage(getString(R.string.offline_disclaimer_songs_list))
                     .setPositiveButton(android.R.string.ok) { _, _ -> }
                     .show()
         }
 
-        mDatabase.child("completed-songs").addValueEventListener(object : ValueEventListener {
+        mDatabase.child("completed-songs").addListenerForSingleValueEvent(object : ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
                 Log.w(TAG, "loadCompletedSongs:onCancelled", databaseError?.toException())
             }
@@ -120,6 +120,7 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
     }
 
     override fun networkUnavailable() {
+        getCompletedSongs()
         val snackbar = Snackbar.make(findViewById(R.id.layout_main), "Network status: OFFLINE",
                 Snackbar.LENGTH_INDEFINITE)
         mSnackbar = snackbar

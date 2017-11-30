@@ -34,8 +34,7 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
             .child("users")
             .child(FirebaseAuth.getInstance().currentUser!!.uid)
     private val TAG = "MainActivity"
-    private var mGuessedSongTitle: String? = null
-    private var mGuessedSongDifficulty: String? = null
+    private var mGuessedSong: Song? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,8 +57,7 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION))
 
-        mGuessedSongTitle = intent.getStringExtra(getString(R.string.intent_song_title))
-        mGuessedSongDifficulty  = intent.getStringExtra(getString(R.string.intent_song_difficulty))
+        mGuessedSong = intent.getParcelableExtra(getString(R.string.intent_song_object))
     }
 
     private fun getCompletedSongs() {
@@ -115,7 +113,7 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         } else {
             getSongsFromDatabase()
             AlertDialog.Builder(this).setTitle("No Internet Connection")
-                    .setMessage("Songle requires Internet connection. Please connect to continue.")
+                    .setMessage(getString(R.string.offline_disclaimer_songs_list))
                     .setPositiveButton(android.R.string.ok) { _, _ -> }
                     .show()
         }
@@ -126,20 +124,14 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         val result = SongsXmlParser().parse(result.inputStream())
         mSongs.clear()
         result.forEach({ mSongs.put(it.title, it) })
-        markCompletedSong()
+        markSongCompleted()
         mAdapter.notifyDataSetChanged()
     }
 
-    private fun markCompletedSong() {
-        if(mGuessedSongTitle != null && mGuessedSongDifficulty != null){
-            val song = mSongs[mGuessedSongTitle as String]!!
-            song.completed = true
-            song.addCompletedDifficulty(mGuessedSongDifficulty as String)
-            mCompletedSongs.put(song.title, song)
-            val dbReference = mDatabase.child("completed-songs")
-            val childUpdates = mutableMapOf<String, Song>()
-            childUpdates[song.title] = song
-            dbReference.updateChildren(childUpdates as Map<String, Any>?)
+    private fun markSongCompleted() {
+        if(mGuessedSong != null){
+            val song = mGuessedSong as Song
+            mCompletedSongs.put(song.title , song)
         }
     }
 
@@ -154,16 +146,14 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
     }
 
     fun getSongsFromDatabase(){
-        mDatabase.addValueEventListener(object: ValueEventListener {
+        mDatabase.child("song-list").addValueEventListener(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
                 Log.w(TAG, "loadTimestamp:onCancelled", databaseError?.toException());
             }
 
             override fun onDataChange(snapshot: DataSnapshot) {
                 if (snapshot.exists()) {
-                    snapshot
-                            .child("song-list")
-                            .children
+                    snapshot.children
                             .map({ Song(it.value as java.util.HashMap<String, Any>) })
                             .forEach({mSongs.put(it.title, it)})
                 }
@@ -183,7 +173,9 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
     }
 
     override fun networkUnavailable() {
-        getSongs()
+        if(mSongs.isEmpty()){
+            getSongs()
+        }
         val snackbar = Snackbar.make(findViewById(R.id.layout_main), "Network status: OFFLINE",
                 Snackbar.LENGTH_INDEFINITE)
         mSnackbar = snackbar

@@ -1,7 +1,9 @@
 package me.pavelgeorgiev.songle
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.support.v7.widget.RecyclerView
+import android.transition.ChangeBounds
 import android.transition.TransitionManager
 import android.util.TypedValue
 import android.view.LayoutInflater
@@ -15,9 +17,11 @@ import kotlinx.android.synthetic.main.song_list_item_completed.view.*
 import android.widget.RelativeLayout
 
 
-
-
-class SongAdapter (private val songs: MutableCollection<Song>, private val context: Context, private val interactive: Boolean, private val completedSongs: HashMap<String, Song> = HashMap())
+class SongAdapter (private val songs: MutableCollection<Song>,
+                   private val context: Context,
+                   private val interactive: Boolean,
+                   private val completedSongs: HashMap<String, Song> = HashMap(),
+                   private val recyclerView: RecyclerView? = null)
     : RecyclerView.Adapter<SongAdapter.ViewHolder>(){
     override fun getItemCount() = songs.size
     private var mExpandedPosition = -1
@@ -36,8 +40,7 @@ class SongAdapter (private val songs: MutableCollection<Song>, private val conte
 //     Create intent to go to Map activity
         val intent = Intent(holder.cv.context, DifficultyActivity::class.java)
 //     Put number of song. Used to load corresponding words on map
-        intent.putExtra(context.getString(R.string.intent_song_number), song.number)
-        intent.putExtra(context.getString(R.string.intent_song_title), song.title)
+        intent.putExtra(context.getString(R.string.intent_song_object), song)
 
         if(completedSongs.containsKey(song.title) && completedSongs[song.title] == song){
             song.completed = true
@@ -95,12 +98,28 @@ class SongAdapter (private val songs: MutableCollection<Song>, private val conte
             holder.text.layoutParams = params
             holder.expand_area?.visibility = if(!isExpanded) View.GONE else View.VISIBLE
 
+            if(!song.difficultiesCompleted!!.isEmpty()){
+                val difficulties = song.difficultiesCompleted!!.joinToString(", ", "Difficulties completed: ")
+                holder.difficulties_list!!.text = difficulties
+            }
+
             holder.layout.isActivated = isExpanded
             holder.layout.setOnClickListener({
                 mExpandedPosition = if(isExpanded) -1 else position
-                TransitionManager.beginDelayedTransition(holder.layout)
+                val transition = ChangeBounds()
+                if(isExpanded) {
+                    transition.duration = 100L
+                } else {
+                    transition.duration = 200L
+                }
+                TransitionManager.beginDelayedTransition(recyclerView, transition)
                 notifyDataSetChanged()
             })
+
+            holder.play_button!!.setOnClickListener({
+                holder.cv.context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(song.link)))
+            })
+
         } else {
             holder.cv.setOnClickListener({ holder.cv.context.startActivity(intent) })
         }
@@ -116,5 +135,7 @@ class SongAdapter (private val songs: MutableCollection<Song>, private val conte
         val arrow = if(interactive) view.expand_arrow else null
         val expand_area = if(interactive) view.expand_area else null
         val layout = if(interactive) view.song_completed_layout else view.song_layout
+        val difficulties_list = if(interactive) view.difficulties_list else null
+        val play_button = if(interactive) view.play_button else null
     }
 }

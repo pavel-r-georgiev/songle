@@ -56,6 +56,7 @@ class MapsActivity :
     private lateinit var mLastLocation: Location
     private lateinit var mSongNumber: String
     private lateinit var mSongTitle: String
+    private lateinit var mSong: Song
     private lateinit var mSongMapVersion: String
     private lateinit var mDrawer: Drawer
     private lateinit var mWordsAdapter: WordAdapter
@@ -95,9 +96,10 @@ class MapsActivity :
         buildSlidingPanel()
         buildGoogleApiClient()
 
-        mSongNumber = intent.getStringExtra(getString(R.string.intent_song_number))
-        mSongTitle = intent.getStringExtra(getString(R.string.intent_song_title))
         mSongMapVersion = intent.getStringExtra(getString(R.string.intent_song_map_version))
+        mSong = intent.getParcelableExtra(getString(R.string.intent_song_object))
+        mSongNumber = mSong.number
+        mSongTitle = mSong.title
 
         when(mSongMapVersion){
             "1" ->{
@@ -151,7 +153,7 @@ class MapsActivity :
         mNetworkSnackbar.setActionTextColor(resources.getColor(R.color.primaryColor))
 
         mErrorDialog =  AlertDialog.Builder(this).setTitle("No Internet Connection")
-                .setMessage("Songle requires Internet connection. Please connect to continue.")
+                .setMessage(getString(R.string.offline_disclaimer_general))
                 .setPositiveButton(android.R.string.ok) { _, _ -> }.create()
     }
 
@@ -611,12 +613,45 @@ class MapsActivity :
         var dialog: Dialog
 
         if(mSongTitle.toLowerCase() == songName.toLowerCase()){
-           dialog = AlertDialog.Builder(this)
+            mDatabase.removeValue()
+            mCollectedWords.clear()
+            mWordsAdapter.notifyDataSetChanged()
+            mSong.addCompletedDifficulty(mDifficulty)
+            mSong.completed = true
+
+            val dbReference = FirebaseDatabase
+                    .getInstance()
+                    .reference
+                    .child("users")
+                    .child(FirebaseAuth.getInstance().uid)
+                    .child("completed-songs")
+
+            dbReference.addListenerForSingleValueEvent(object: ValueEventListener {
+                override fun onCancelled(databaseError: DatabaseError?) {
+                    Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException());
+                }
+
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    mPlacemarks.clear()
+                    if (snapshot.exists() && snapshot.child(mSong.title).child("difficultiesCompleted").exists()) {
+                        for(difficulty in snapshot.child(mSong.title).child("difficultiesCompleted").children){
+                            mSong.addCompletedDifficulty(difficulty.value as String)
+                        }
+                    }
+
+                    val childUpdates = mutableMapOf<String, Song>()
+                    childUpdates[mSong.title] = mSong
+                    dbReference.updateChildren(childUpdates as Map<String, Any>?)
+                }
+            })
+
+
+            dialog = AlertDialog.Builder(this)
                     .setTitle("Success!")
                     .setMessage("Congratulations you guessed the song.")
                     .setNeutralButton("New Song", { _, _ ->
                         val intent = Intent(this, MainActivity::class.java)
-                        intent.putExtra(getString(R.string.intent_song_title), mSongTitle)
+                        intent.putExtra(getString(R.string.intent_song_object), mSong)
                         intent.putExtra(getString(R.string.intent_song_difficulty), mDifficulty)
                         startActivity(intent)
                     })
@@ -710,7 +745,6 @@ class MapsActivity :
     }
 
     override fun networkUnavailable() {
-        println(mPlacemarks.isEmpty())
         getSongData()
         mNetworkSnackbar.show()
     }
