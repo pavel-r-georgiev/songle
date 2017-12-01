@@ -8,8 +8,7 @@
     <string name="drawer_close">Close navigation drawer</string>
     <string name="song_name_input_text">Song name</string>
     <string name="collected_lyrics">Collected lyrics</string>
-    <string name="word">Word</string>
-    <string name="location">Location</string>
+    <string name="lyrics">Lyrics</string>
     <string name="choose_difficulty">Please choose difficulty</string>
     <string name="difficulty_easy">Easy</string>
     <string name="difficulty_medium">Medium</string>

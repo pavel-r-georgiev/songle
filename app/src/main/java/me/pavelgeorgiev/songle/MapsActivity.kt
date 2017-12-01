@@ -13,7 +13,6 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.support.v4.content.ContextCompat
-import android.view.View
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationRequest
@@ -24,8 +23,7 @@ import android.os.Build
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.util.Log
-import android.view.Gravity
-import android.view.WindowManager
+import android.view.*
 import android.view.inputmethod.EditorInfo
 import android.widget.*
 import com.google.android.gms.maps.*
@@ -38,6 +36,9 @@ import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.android.synthetic.main.lyrics_line.view.*
+import org.apmem.tools.layouts.FlowLayout
+import org.w3c.dom.Text
 
 
 @Suppress("DEPRECATION")
@@ -59,7 +60,6 @@ class MapsActivity :
     private lateinit var mSong: Song
     private lateinit var mSongMapVersion: String
     private lateinit var mDrawer: Drawer
-    private lateinit var mWordsAdapter: WordAdapter
     private lateinit var mWordsListView: ListView
     private lateinit var mLastPlacemarkLocation: LatLng
     private lateinit var kmlUrl: String
@@ -70,7 +70,8 @@ class MapsActivity :
     private lateinit var mDatabase: DatabaseReference
     private lateinit var mUser: FirebaseUser
     private lateinit var mDifficulty: String
-    private var mLyrics = HashMap<String, List<String>>()
+    private var mLyrics = LinkedHashMap<String, List<String>>()
+    private var mLyricsViews = HashMap<String, FlowLayout>()
     private var mCurrLocationMarker: Marker? = null
     private var mCollectedWords = HashMap<String, String>()
     private var mPlacemarks = HashMap<String, Placemark>()
@@ -209,9 +210,11 @@ class MapsActivity :
                 } else {
                     getLyrics()
                 }
+                buildLyricsLayout()
             }
         })
     }
+
     private fun getLyrics() {
         if (NetworkReceiver.isNetworkConnected(this)) {
             DownloadFileService(this, DownloadFileService.TXT_TYPE).execute(lyricsUrl)
@@ -316,7 +319,31 @@ class MapsActivity :
             }
         }
         inputStream.close()
+        buildLyricsLayout()
         mDatabase.child("lyrics").setValue(mLyrics)
+    }
+
+    private fun buildLyricsLayout() {
+        mLyrics.forEach{ entry ->
+            val lineView = LayoutInflater.from(this).inflate(R.layout.lyrics_line, null)
+            var wordNum = 1
+            entry.value.forEach {
+                val textView = TextView(this)
+                textView.text = it
+                if(!mCollectedWords.containsKey("${entry.key}:$wordNum")){
+                    textView.setBackgroundResource(R.color.secondaryText)
+                    textView.setTextColor(resources.getColor(R.color.secondaryText))
+                }
+
+                val padding = CommonFunctions.dpToPx(3, this)
+                textView.setPadding(padding,0,padding,0)
+                lineView.lyrics_line_layout.addView(textView)
+                wordNum++
+            }
+            mLyricsViews.put(entry.key, lineView as FlowLayout)
+            lyrics_word_list.addView(lineView)
+        }
+
     }
 
     private fun parseLine(line: String) {
@@ -604,9 +631,6 @@ class MapsActivity :
             }
             return@setOnEditorActionListener handled
         })
-        mWordsAdapter = WordAdapter(mCollectedWords, this)
-        mWordsListView = lyrics_word_list
-        mWordsListView.adapter = mWordsAdapter
     }
 
     private fun guessSong(songName: String) {
@@ -615,7 +639,7 @@ class MapsActivity :
         if(mSongTitle.toLowerCase() == songName.toLowerCase()){
             mDatabase.removeValue()
             mCollectedWords.clear()
-            mWordsAdapter.notifyDataSetChanged()
+            buildLyricsLayout()
             mSong.addCompletedDifficulty(mDifficulty)
             mSong.completed = true
 
@@ -693,7 +717,16 @@ class MapsActivity :
 
          mCollectedWords.put(location, word)
          sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
-         mWordsAdapter.notifyDataSetChanged()
+
+//         Uncover word in the lyrics view
+         val wordCoord = location.split(":").map { it.toInt() }
+         val line = wordCoord[0].toString()
+         val word = wordCoord[1] - 1
+         var lineLayout = mLyricsViews[line] as FlowLayout
+
+         var textView = lineLayout.getChildAt(word) as TextView
+         textView.setBackgroundResource(android.R.color.transparent)
+
      }
 
     private fun saveProgress(){
