@@ -1,6 +1,7 @@
 package me.pavelgeorgiev.songle
 
 import android.content.Intent
+import android.app.Dialog
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.support.v7.app.AppCompatActivity
@@ -24,6 +25,7 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
     private lateinit var mDrawer: Drawer
     private lateinit var mToolbar: Toolbar
     private lateinit var mReceiver: NetworkReceiver
+    private lateinit var mErrorDialog: Dialog
     private var mSnackbar: Snackbar? = null
     private var mCompletedSongs = mutableListOf<Song>()
     private lateinit var mDatabase: DatabaseReference
@@ -52,11 +54,18 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
                 .child("users")
                 .child(FirebaseAuth.getInstance().uid)
 
+        mErrorDialog = AlertDialog.Builder(this).setTitle("No Internet Connection")
+                .setMessage(getString(R.string.offline_disclaimer_songs_list))
+                .setPositiveButton(android.R.string.ok) { _, _ -> }
+                .create()
+
+
         mReceiver =  NetworkReceiver()
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
         getCompletedSongs()
     }
+
 
     private fun buildDrawerNav() {
         val item1 = PrimaryDrawerItem().
@@ -89,11 +98,8 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
     }
 
     private fun getCompletedSongs() {
-        if (!NetworkReceiver.isNetworkConnected(this)) {
-            AlertDialog.Builder(this).setTitle("No Internet Connection")
-                    .setMessage(getString(R.string.offline_disclaimer_songs_list))
-                    .setPositiveButton(android.R.string.ok) { _, _ -> }
-                    .show()
+        if (!NetworkReceiver.isNetworkConnected(this) && !mErrorDialog.isShowing) {
+            mErrorDialog.show()
         }
 
         mDatabase.child("completed-songs").addListenerForSingleValueEvent(object : ValueEventListener {
