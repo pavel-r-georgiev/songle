@@ -639,8 +639,6 @@ class MapsActivity :
         if(mSongTitle.toLowerCase() == songName.toLowerCase()){
             mDatabase.removeValue()
             mCollectedWords.clear()
-            buildLyricsLayout()
-            sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
             mSong.addCompletedDifficulty(mSongMapVersion)
             mSong.completed = true
 
@@ -673,6 +671,7 @@ class MapsActivity :
 
             dialog = AlertDialog.Builder(this)
                     .setTitle("Success!")
+                    .setCancelable(false)
                     .setMessage("Congratulations you guessed the song.")
                     .setNeutralButton("New Song", { _, _ ->
                         val intent = Intent(this, MainActivity::class.java)
