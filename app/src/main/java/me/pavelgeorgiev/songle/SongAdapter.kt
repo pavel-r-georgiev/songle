@@ -99,7 +99,11 @@ class SongAdapter (private val songs: MutableCollection<Song>,
             holder.expand_area?.visibility = if(!isExpanded) View.GONE else View.VISIBLE
 
             if(!song.difficultiesCompleted!!.isEmpty()){
-                val difficulties = song.difficultiesCompleted!!.joinToString(", ", "Difficulties completed: ")
+                val difficulties = song.difficultiesCompleted!!.
+                        map { it.toInt() }
+                        .sortedDescending()
+                        .map {Difficulty.fromMapVersion(it)}
+                        .joinToString(", ", "Difficulties completed: ")
                 holder.difficulties_list!!.text = difficulties
             }
 

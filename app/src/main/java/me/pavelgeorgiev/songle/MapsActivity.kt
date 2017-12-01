@@ -640,7 +640,8 @@ class MapsActivity :
             mDatabase.removeValue()
             mCollectedWords.clear()
             buildLyricsLayout()
-            mSong.addCompletedDifficulty(mDifficulty)
+            sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
+            mSong.addCompletedDifficulty(mSongMapVersion)
             mSong.completed = true
 
             val dbReference = FirebaseDatabase
@@ -676,7 +677,6 @@ class MapsActivity :
                     .setNeutralButton("New Song", { _, _ ->
                         val intent = Intent(this, MainActivity::class.java)
                         intent.putExtra(getString(R.string.intent_song_object), mSong)
-                        intent.putExtra(getString(R.string.intent_song_difficulty), mDifficulty)
                         startActivity(intent)
                     })
                     .create()
