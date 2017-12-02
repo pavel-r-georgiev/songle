@@ -31,6 +31,10 @@
     <string name="offline_disclaimer_map">Progress made will be saved offline and synced with your other devices once connection is available. Please consider connecting to the Internet to improve your experience playing Songle.</string>
     <string name="intent_song_title">SONG_NAME</string>
     <string name="intent_song_object">SONG_OBJECT</string>
+    <string name="timeout_tooltip">The current difficulty includes a time constraint. On timeout all progress made is lost. \nTimer is restarted on every word pickup.\nFind the time remaining in the bottom part of your screen.\n<b>Good luck</b>!</string>
+    <string name="timeout_message">Unfortunately, time is over.</string>
+    <string name="try_again">Try again</string>
+    <string name="play">Play</string>
     <!-- Strings related to login -->
     <string name="prompt_email">Email</string>
     <string name="prompt_password">Password (optional)</string>
@@ -64,5 +68,5 @@
     <string name="go_back_to_songs">Return to exploring new songs</string>
     <string name="link_account">Link Account</string>
     <string name="account_management_title">Link your account to save your progress.</string>
-    <string name="try_again">Try again</string>
+
 </resources>

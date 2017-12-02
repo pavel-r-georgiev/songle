@@ -68,6 +68,7 @@ class LogoutActivity : AppCompatActivity(), View.OnClickListener {
                 email_create_account_button.visibility = View.VISIBLE
             } else {
                 email_password_fields.visibility = View.GONE
+                email_create_account_button.visibility = View.GONE
             }
 
             signed_in_buttons.visibility = View.VISIBLE

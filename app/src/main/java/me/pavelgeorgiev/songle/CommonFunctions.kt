@@ -3,6 +3,7 @@ package me.pavelgeorgiev.songle
 import android.app.Activity
 import android.content.Context
 import android.content.Intent
+import android.graphics.Color
 import android.support.v7.widget.Toolbar
 import com.google.firebase.auth.FirebaseAuth
 import com.mikepenz.materialdrawer.AccountHeaderBuilder
@@ -97,6 +98,13 @@ class CommonFunctions {
         fun dpToPx(dp: Int, context: Context): Int {
             val density = context.resources.displayMetrics.density
             return Math.round(dp.toFloat() * density)
+        }
+
+        fun getColorWithAlpha(yourColor: Int, alpha: Int): Int {
+            val red = Color.red(yourColor)
+            val blue = Color.blue(yourColor)
+            val green = Color.green(yourColor)
+            return Color.argb(alpha, red, green, blue)
         }
         }
 }

@@ -20,6 +20,7 @@ import com.google.android.gms.location.LocationServices
 
 import com.google.android.gms.location.LocationListener;
 import android.os.Build
+import android.os.CountDownTimer
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
 import android.util.Log
@@ -38,7 +39,6 @@ import java.io.IOException
 import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.android.synthetic.main.lyrics_line.view.*
 import org.apmem.tools.layouts.FlowLayout
-import org.w3c.dom.Text
 
 
 @Suppress("DEPRECATION")
@@ -70,14 +70,17 @@ class MapsActivity :
     private lateinit var mDatabase: DatabaseReference
     private lateinit var mUser: FirebaseUser
     private lateinit var mDifficulty: String
+    private lateinit var mCountdownTimer: CountDownTimer
     private var mLyrics = LinkedHashMap<String, List<String>>()
     private var mLyricsViews = HashMap<String, FlowLayout>()
     private var mCurrLocationMarker: Marker? = null
+    private var mCollectArea: Circle? = null
     private var mCollectedWords = HashMap<String, String>()
     private var mPlacemarks = HashMap<String, Placemark>()
 
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
     var COLLECT_DISTANCE_THRESHOLD = 30
+    var TIMEOUT_SECONDS = 300
     val TAG = "MapsActivity"
     val LOCATION_REQUEST_INTERVAL: Long = 5000
     val LOCATION_REQUEST_FASTEST_INTERVAL: Long = 1000
@@ -105,11 +108,13 @@ class MapsActivity :
         when(mSongMapVersion){
             "1" ->{
                 mDifficulty = getString(R.string.difficulty_impossible)
-                COLLECT_DISTANCE_THRESHOLD = 30
+                COLLECT_DISTANCE_THRESHOLD = 40
+                TIMEOUT_SECONDS = 180
             }
             "2" ->{
                 mDifficulty = getString(R.string.difficulty_very_hard)
-                COLLECT_DISTANCE_THRESHOLD = 45
+                COLLECT_DISTANCE_THRESHOLD = 50
+                TIMEOUT_SECONDS = 360
             }
             "3" ->{
                 mDifficulty = getString(R.string.difficulty_hard)
@@ -141,7 +146,27 @@ class MapsActivity :
 
         mReceiver =  NetworkReceiver()
         mReceiver.addListener(this)
-        this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+        this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+
+        if(mDifficulty == getString(R.string.difficulty_very_hard) || mDifficulty == getString(R.string.difficulty_impossible)) {
+            startTimer(TIMEOUT_SECONDS)
+        } else {
+            progressBar.visibility = View.GONE
+        }
+    }
+
+    private fun startTimer(seconds: Int) {
+        AlertDialog.Builder(this).setTitle("How about a challenge?")
+                .setMessage(getString(R.string.timeout_tooltip))
+                .setPositiveButton(R.string.play) { _, _ ->
+                    mCountdownTimer = MyCountDownTimer(seconds.toLong() * 1000, 1000)
+                    progressBar.max = seconds
+                    mCountdownTimer.start()
+                }
+                .setNeutralButton("Change difficulty", { _, _ ->
+                    finish()
+                }).create()
+                .show()
     }
 
     private fun buildSnackbarAndDialogs() {
@@ -270,13 +295,13 @@ class MapsActivity :
                     Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
                 //Location Permission already granted
-                mMap.isMyLocationEnabled = true
+                mMap.isMyLocationEnabled = false
             } else {
                 //Request Location Permission
                 checkLocationPermission()
             }
         } else {
-            mMap.isMyLocationEnabled = true
+            mMap.isMyLocationEnabled = false
         }
 
         // Add ”My location” button to the user interface
@@ -513,7 +538,7 @@ class MapsActivity :
                         if (mGoogleApiClient == null) {
                             buildGoogleApiClient()
                         }
-                        mMap.isMyLocationEnabled = true
+                        mMap.isMyLocationEnabled = false
                     }
 
                 } else {
@@ -624,7 +649,6 @@ class MapsActivity :
         sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
         song_name_input.setOnEditorActionListener({view, actionId, event -> 
             var handled = false
-            println(actionId)
             if((actionId === EditorInfo.IME_ACTION_DONE || actionId === EditorInfo.IME_NULL)){
                 guessSong(view.text.toString())
                 handled = true
@@ -767,8 +791,22 @@ class MapsActivity :
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN))
         mCurrLocationMarker = mMap.addMarker(markerOptions)
 
+        if(mCollectArea == null) {
+            val circleOptions = CircleOptions()
+            val transparentColor = CommonFunctions.getColorWithAlpha(ContextCompat.getColor(this, R.color.primaryLightColor), 110)
+            circleOptions.center(latLng)
+                    .radius(COLLECT_DISTANCE_THRESHOLD.toDouble())
+                    .strokeColor(ContextCompat.getColor(this, R.color.primaryLightColor))
+                    .fillColor(transparentColor)
+                    .strokeWidth(3.5F)
+            mCollectArea = mMap.addCircle(circleOptions)
+        } else {
+            mCollectArea!!.center = latLng
+        }
+
+
         //Move map camera
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17.7F));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17.7F))
     }
 
     override fun networkAvailable() {
@@ -788,6 +826,33 @@ class MapsActivity :
         }
         if (mLyrics.isEmpty()) {
             getLyricsFromDatabase()
+        }
+    }
+
+    inner class MyCountDownTimer(private val millisInFuture: Long, private val countDownInterval: Long): CountDownTimer(millisInFuture, countDownInterval) {
+        override fun onTick(millisUntilFinished: Long) {
+
+            val progress = (millisUntilFinished/1000).toInt()
+
+            progressBar.progress = progressBar.max - progress
+        }
+
+        override  fun onFinish() {
+            mDatabase.removeValue()
+            mCollectedWords.clear()
+            sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
+
+            AlertDialog.Builder(this@MapsActivity).setTitle("Timeout")
+                    .setMessage(getString(R.string.timeout_message))
+                    .setPositiveButton(R.string.try_again) { _, _ ->
+                        val intent = intent
+                        finish()
+                        startActivity(intent)
+                    }
+                    .setNeutralButton("Different song", { _, _ ->
+                        startActivity(Intent(this@MapsActivity, MainActivity::class.java))
+                    }).create()
+                    .show()
         }
     }
 }
