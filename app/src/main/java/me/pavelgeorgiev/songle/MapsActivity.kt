@@ -110,6 +110,12 @@ class MapsActivity :
         buildGoogleApiClient()
         setupDifficulty()
         setupFirebase()
+//        Start timer if difficulty requires one
+        if (mDifficulty == getString(R.string.difficulty_very_hard) || mDifficulty == getString(R.string.difficulty_impossible)) {
+            startTimer(TIMEOUT_SECONDS)
+        } else {
+            progressBar.visibility = View.GONE
+        }
 
 //       Setup network receiver
         mReceiver =  NetworkReceiver()
@@ -133,18 +139,17 @@ class MapsActivity :
 
     /**
      * Get song object from the intent and setup class variables accordingly.
-     * Start the timer of difficulty has one.
      */
     private fun setupDifficulty() {
-        val baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
-        val mapVersion = "map$mSongMapVersion.kml"
-        kmlUrl = "$baseUrl/$mapVersion"
-        lyricsUrl = "$baseUrl/words.txt"
-
         mSongMapVersion = intent.getStringExtra(getString(R.string.intent_song_map_version))
         mSong = intent.getParcelableExtra(getString(R.string.intent_song_object))
         mSongNumber = mSong.number
         mSongTitle = mSong.title
+
+        val baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
+        val mapVersion = "map$mSongMapVersion.kml"
+        kmlUrl = "$baseUrl/$mapVersion"
+        lyricsUrl = "$baseUrl/words.txt"
 
         when (mSongMapVersion) {
             "1" -> {
@@ -170,12 +175,6 @@ class MapsActivity :
                 COLLECT_DISTANCE_THRESHOLD = 100
             }
         }
-
-        if (mDifficulty == getString(R.string.difficulty_very_hard) || mDifficulty == getString(R.string.difficulty_impossible)) {
-            startTimer(TIMEOUT_SECONDS)
-        } else {
-            progressBar.visibility = View.GONE
-        }
     }
 
     /**
@@ -198,6 +197,7 @@ class MapsActivity :
                 } else {
                     AlertDialog.Builder(this@MapsActivity).setTitle("How about a challenge?")
                             .setMessage(getString(R.string.timeout_tooltip))
+                            .setCancelable(false)
                             .setPositiveButton(R.string.play) { _, _ ->
                                 mCountdownTimer = MyCountDownTimer(seconds.toLong() * 1000, 1000)
                                 mCountdownTimer!!.start()
@@ -1023,6 +1023,7 @@ class MapsActivity :
 
             AlertDialog.Builder(this@MapsActivity).setTitle("Timeout")
                     .setMessage(getString(R.string.timeout_message))
+                    .setCancelable(false)
                     .setPositiveButton(R.string.try_again) { _, _ ->
                         val intent = intent
                         finish()
