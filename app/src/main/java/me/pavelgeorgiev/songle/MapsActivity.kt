@@ -78,6 +78,7 @@ class MapsActivity :
     private var mCollectArea: Circle? = null
     private var mCollectedWords = HashMap<String, String>()
     private var mPlacemarks = HashMap<String, Placemark>()
+    private var mSongGuessed = false
 
     val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
     var COLLECT_DISTANCE_THRESHOLD = 30
@@ -223,7 +224,9 @@ class MapsActivity :
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
         unregisterReceiver(mReceiver)
-        mDatabase.child("timeLeft").setValue(mTimerMillisLeft)
+        if(!mSongGuessed) {
+            mDatabase.child("timeLeft").setValue(mTimerMillisLeft)
+        }
     }
 
 
@@ -682,6 +685,7 @@ class MapsActivity :
             mCollectedWords.clear()
             mSong.addCompletedDifficulty(mSongMapVersion)
             mSong.completed = true
+            mSongGuessed = true
 
             val dbReference = FirebaseDatabase
                     .getInstance()
