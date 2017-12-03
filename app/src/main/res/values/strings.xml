@@ -32,7 +32,7 @@
     <string name="intent_song_title">SONG_NAME</string>
     <string name="intent_song_object">SONG_OBJECT</string>
     <string name="timeout_tooltip">The current difficulty includes a time constraint. On timeout all progress made is lost. \nTimer is restarted on every word pickup.\nFind the time remaining in the bottom part of your screen.\n<b>Good luck</b>!</string>
-    <string name="timeout_message">Unfortunately, time is over.</string>
+    <string name="timeout_message">Unfortunately, your time is over.</string>
     <string name="try_again">Try again</string>
     <string name="play">Play</string>
     <!-- Strings related to login -->

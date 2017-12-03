@@ -71,6 +71,7 @@ class MapsActivity :
     private lateinit var mUser: FirebaseUser
     private lateinit var mDifficulty: String
     private lateinit var mCountdownTimer: CountDownTimer
+    private var mTimerMillisLeft = 0L
     private var mLyrics = LinkedHashMap<String, List<String>>()
     private var mLyricsViews = HashMap<String, FlowLayout>()
     private var mCurrLocationMarker: Marker? = null
@@ -156,17 +157,32 @@ class MapsActivity :
     }
 
     private fun startTimer(seconds: Int) {
-        AlertDialog.Builder(this).setTitle("How about a challenge?")
-                .setMessage(getString(R.string.timeout_tooltip))
-                .setPositiveButton(R.string.play) { _, _ ->
-                    mCountdownTimer = MyCountDownTimer(seconds.toLong() * 1000, 1000)
-                    progressBar.max = seconds
+        mDatabase.child("timeLeft").addListenerForSingleValueEvent(object: ValueEventListener {
+            override fun onCancelled(databaseError: DatabaseError?) {
+                Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException());
+            }
+
+            override fun onDataChange(snapshot: DataSnapshot) {
+                progressBar.max = seconds
+                if (snapshot.exists()) {
+                    mTimerMillisLeft = snapshot.value as Long
+                    mCountdownTimer = MyCountDownTimer(mTimerMillisLeft, 1000)
                     mCountdownTimer.start()
+                } else {
+                    AlertDialog.Builder(this@MapsActivity).setTitle("How about a challenge?")
+                            .setMessage(getString(R.string.timeout_tooltip))
+                            .setPositiveButton(R.string.play) { _, _ ->
+                                mCountdownTimer = MyCountDownTimer(seconds.toLong() * 1000, 1000)
+                                mCountdownTimer.start()
+                            }
+                            .setNeutralButton("Change difficulty", { _, _ ->
+                                finish()
+                            }).create()
+                            .show()
                 }
-                .setNeutralButton("Change difficulty", { _, _ ->
-                    finish()
-                }).create()
-                .show()
+            }
+        })
+
     }
 
     private fun buildSnackbarAndDialogs() {
@@ -207,6 +223,7 @@ class MapsActivity :
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
         unregisterReceiver(mReceiver)
+        mDatabase.child("timeLeft").setValue(mTimerMillisLeft)
     }
 
 
@@ -295,13 +312,13 @@ class MapsActivity :
                     Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
                 //Location Permission already granted
-                mMap.isMyLocationEnabled = false
+                mMap.isMyLocationEnabled = true
             } else {
                 //Request Location Permission
                 checkLocationPermission()
             }
         } else {
-            mMap.isMyLocationEnabled = false
+            mMap.isMyLocationEnabled = true
         }
 
         // Add ”My location” button to the user interface
@@ -538,7 +555,7 @@ class MapsActivity :
                         if (mGoogleApiClient == null) {
                             buildGoogleApiClient()
                         }
-                        mMap.isMyLocationEnabled = false
+                        mMap.isMyLocationEnabled = true
                     }
 
                 } else {
@@ -793,10 +810,10 @@ class MapsActivity :
 
         if(mCollectArea == null) {
             val circleOptions = CircleOptions()
-            val transparentColor = CommonFunctions.getColorWithAlpha(ContextCompat.getColor(this, R.color.primaryLightColor), 110)
+            val transparentColor = CommonFunctions.getColorWithAlpha(ContextCompat.getColor(this, R.color.secondaryColor), 40)
             circleOptions.center(latLng)
                     .radius(COLLECT_DISTANCE_THRESHOLD.toDouble())
-                    .strokeColor(ContextCompat.getColor(this, R.color.primaryLightColor))
+                    .strokeColor(ContextCompat.getColor(this, R.color.secondaryColor))
                     .fillColor(transparentColor)
                     .strokeWidth(3.5F)
             mCollectArea = mMap.addCircle(circleOptions)
@@ -832,9 +849,9 @@ class MapsActivity :
     inner class MyCountDownTimer(private val millisInFuture: Long, private val countDownInterval: Long): CountDownTimer(millisInFuture, countDownInterval) {
         override fun onTick(millisUntilFinished: Long) {
 
-            val progress = (millisUntilFinished/1000).toInt()
-
-            progressBar.progress = progressBar.max - progress
+            val progress = progressBar.max - (millisUntilFinished/1000).toInt()
+            mTimerMillisLeft = millisUntilFinished
+            progressBar.progress = progress
         }
 
         override  fun onFinish() {
