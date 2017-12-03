@@ -9,36 +9,42 @@ import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
 import android.net.ConnectivityManager
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-import android.support.v4.app.ActivityCompat
-import android.support.v4.content.ContextCompat
-import com.google.android.gms.common.ConnectionResult
-import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationServices
-
-import com.google.android.gms.location.LocationListener;
 import android.os.Build
+import android.os.Bundle
 import android.os.CountDownTimer
 import android.support.design.widget.Snackbar
+import android.support.v4.app.ActivityCompat
+import android.support.v4.content.ContextCompat
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.view.*
+import android.view.Gravity
+import android.view.LayoutInflater
+import android.view.View
+import android.view.WindowManager
 import android.view.inputmethod.EditorInfo
-import android.widget.*
-import com.google.android.gms.maps.*
+import android.widget.TextView
+import android.widget.Toast
+import com.google.android.gms.common.ConnectionResult
+import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.location.LocationListener
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.OnMapReadyCallback
+import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.*
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
-import org.xmlpull.v1.XmlPullParserException
-import java.io.IOException
 import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.android.synthetic.main.lyrics_line.view.*
 import org.apmem.tools.layouts.FlowLayout
+import org.xmlpull.v1.XmlPullParserException
+import java.io.IOException
 
 
 @Suppress("DEPRECATION")
@@ -53,14 +59,11 @@ class MapsActivity :
 
     private lateinit var mMap: GoogleMap
     private lateinit var mGoogleApiClient: GoogleApiClient
-    private lateinit var mLocationRequest: LocationRequest
-    private lateinit var mLastLocation: Location
     private lateinit var mSongNumber: String
     private lateinit var mSongTitle: String
     private lateinit var mSong: Song
     private lateinit var mSongMapVersion: String
     private lateinit var mDrawer: Drawer
-    private lateinit var mWordsListView: ListView
     private lateinit var mLastPlacemarkLocation: LatLng
     private lateinit var kmlUrl: String
     private lateinit var lyricsUrl: String
@@ -80,12 +83,12 @@ class MapsActivity :
     private var mPlacemarks = HashMap<String, Placemark>()
     private var mSongGuessed = false
 
-    val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
-    var COLLECT_DISTANCE_THRESHOLD = 30
-    var TIMEOUT_SECONDS = 300
+    private val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
+    private var COLLECT_DISTANCE_THRESHOLD = 30
+    private var TIMEOUT_SECONDS = 300
     val TAG = "MapsActivity"
-    val LOCATION_REQUEST_INTERVAL: Long = 5000
-    val LOCATION_REQUEST_FASTEST_INTERVAL: Long = 1000
+    private val LOCATION_REQUEST_INTERVAL: Long = 5000
+    private val LOCATION_REQUEST_FASTEST_INTERVAL: Long = 1000
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -160,7 +163,7 @@ class MapsActivity :
     private fun startTimer(seconds: Int) {
         mDatabase.child("timeLeft").addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
-                Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException());
+                Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException())
             }
 
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -221,7 +224,7 @@ class MapsActivity :
 
 //        Stop location updates when Activity is not active
         if (mGoogleApiClient.isConnected) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
+            LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this)
         }
         unregisterReceiver(mReceiver)
         if(!mSongGuessed) {
@@ -243,7 +246,7 @@ class MapsActivity :
     private fun getLyricsFromDatabase(){
         mDatabase.addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
-                Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException());
+                Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException())
             }
 
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -273,7 +276,7 @@ class MapsActivity :
     private fun getProgress() {
         mDatabase.addListenerForSingleValueEvent(object: ValueEventListener {
                     override fun onCancelled(databaseError: DatabaseError?) {
-                        Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException());
+                        Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException())
                     }
 
                     override fun onDataChange(snapshot: DataSnapshot) {
@@ -393,9 +396,9 @@ class MapsActivity :
 
     private fun parseLine(line: String) {
         val lineList = line.trim().split("\\s+".toRegex())
-        var lineNumber: Int
-        try {
-            lineNumber = lineList[0].toInt()
+        val lineNumber: Int
+        lineNumber = try {
+            lineList[0].toInt()
         } catch (e: NumberFormatException) {
             Log.d(TAG, e.message)
             return
@@ -647,7 +650,7 @@ class MapsActivity :
 
 
         if (Build.VERSION.SDK_INT >= 19) {
-            mDrawer.drawerLayout.fitsSystemWindows = false;
+            mDrawer.drawerLayout.fitsSystemWindows = false
         }
         mapMenuButton.setOnClickListener({toggleMenu(it)})
     }
@@ -655,13 +658,13 @@ class MapsActivity :
 
     private fun setWindowFlag(activity: Activity, bits: Int, on: Boolean) {
         val win = activity.window
-        val winParams = win.attributes;
+        val winParams = win.attributes
         if (on) {
             winParams.flags = winParams.flags or bits
         } else {
             winParams.flags = winParams.flags and bits.inv()
         }
-        win.attributes = winParams;
+        win.attributes = winParams
     }
 
 
@@ -678,7 +681,7 @@ class MapsActivity :
     }
 
     private fun guessSong(songName: String) {
-        var dialog: Dialog
+        val dialog: Dialog
 
         if(mSongTitle.toLowerCase() == songName.toLowerCase()){
             mDatabase.removeValue()
@@ -696,7 +699,7 @@ class MapsActivity :
 
             dbReference.addListenerForSingleValueEvent(object: ValueEventListener {
                 override fun onCancelled(databaseError: DatabaseError?) {
-                    Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException());
+                    Log.w(TAG, "loadMapProgress:onCancelled", databaseError?.toException())
                 }
 
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -766,9 +769,9 @@ class MapsActivity :
          val wordCoord = location.split(":").map { it.toInt() }
          val line = wordCoord[0].toString()
          val word = wordCoord[1] - 1
-         var lineLayout = mLyricsViews[line] as FlowLayout
+         val lineLayout = mLyricsViews[line] as FlowLayout
 
-         var textView = lineLayout.getChildAt(word) as TextView
+         val textView = lineLayout.getChildAt(word) as TextView
          textView.setBackgroundResource(android.R.color.transparent)
 
      }
@@ -850,7 +853,7 @@ class MapsActivity :
         }
     }
 
-    inner class MyCountDownTimer(private val millisInFuture: Long, private val countDownInterval: Long): CountDownTimer(millisInFuture, countDownInterval) {
+    inner class MyCountDownTimer(millisInFuture: Long, countDownInterval: Long): CountDownTimer(millisInFuture, countDownInterval) {
         override fun onTick(millisUntilFinished: Long) {
 
             val progress = progressBar.max - (millisUntilFinished/1000).toInt()

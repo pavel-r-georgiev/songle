@@ -1,6 +1,5 @@
 package me.pavelgeorgiev.songle
 
-import android.content.BroadcastReceiver
 import android.os.AsyncTask
 import java.io.IOException
 import java.io.InputStream
@@ -17,10 +16,10 @@ class DownloadFileService(private val caller : DownloadFileCallback, private val
         val XML_TYPE = "XML"
     }
 
-    val READ_TIMEOUT = 1000
-    val CONNECTION_TIMEOUT = 15000
-    lateinit var mStream : InputStream
-    lateinit var output : ByteArray
+    private val READ_TIMEOUT = 1000
+    private val CONNECTION_TIMEOUT = 15000
+    private lateinit var mStream : InputStream
+    private lateinit var output : ByteArray
     private var error = false
     private var errorMessage: String? = null
 

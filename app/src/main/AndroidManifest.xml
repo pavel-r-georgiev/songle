@@ -28,7 +28,7 @@
         android:supportsRtl="true"
         android:theme="@style/SongleTheme"
         android:name=".Application">
-        <activity android:name=".MainActivity"></activity>
+        <activity android:name=".MainActivity"/>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -62,7 +62,7 @@
         <activity
             android:name=".LogoutActivity"
             android:label="@string/title_activity_logout"
-            android:windowSoftInputMode="stateHidden"></activity>
+            android:windowSoftInputMode="stateHidden" />
 
         <receiver
             android:name=".NetworkReceiver"
@@ -72,7 +72,7 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".CompletedActivity"></activity>
+        <activity android:name=".CompletedActivity" />
     </application>
 
 </manifest>

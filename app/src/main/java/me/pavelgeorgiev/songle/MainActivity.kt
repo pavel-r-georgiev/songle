@@ -1,20 +1,23 @@
 package me.pavelgeorgiev.songle
 
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
+import android.content.IntentFilter
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
+import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
-import android.content.IntentFilter
-import android.support.design.widget.Snackbar
-import android.util.Log
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.*
 
 
 
@@ -145,10 +148,10 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
                 }.show()
     }
 
-    fun getSongsFromDatabase(){
+    private fun getSongsFromDatabase(){
         mDatabase.child("song-list").addValueEventListener(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
-                Log.w(TAG, "loadTimestamp:onCancelled", databaseError?.toException());
+                Log.w(TAG, "loadTimestamp:onCancelled", databaseError?.toException())
             }
 
             override fun onDataChange(snapshot: DataSnapshot) {

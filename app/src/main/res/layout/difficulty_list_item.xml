@@ -16,7 +16,8 @@
         android:layout_height="wrap_content"
         android:layout_weight="0.7"
         android:adjustViewBounds="true"
-        android:scaleType="fitXY" />
+        android:scaleType="fitXY"
+        android:contentDescription="Difficulty image" />
 
     <LinearLayout
         android:layout_width="0dp"

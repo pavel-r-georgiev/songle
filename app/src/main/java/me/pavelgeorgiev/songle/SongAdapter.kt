@@ -5,16 +5,15 @@ import android.net.Uri
 import android.support.v7.widget.RecyclerView
 import android.transition.ChangeBounds
 import android.transition.TransitionManager
-import android.util.TypedValue
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.squareup.picasso.Picasso
-import kotlinx.android.synthetic.main.song_list_item.view.*
-import com.squareup.picasso.Callback
-import jp.wasabeef.picasso.transformations.BlurTransformation
-import kotlinx.android.synthetic.main.song_list_item_completed.view.*
 import android.widget.RelativeLayout
+import com.squareup.picasso.Callback
+import com.squareup.picasso.Picasso
+import jp.wasabeef.picasso.transformations.BlurTransformation
+import kotlinx.android.synthetic.main.song_list_item.view.*
+import kotlinx.android.synthetic.main.song_list_item_completed.view.*
 
 
 class SongAdapter (private val songs: MutableCollection<Song>,
@@ -77,9 +76,9 @@ class SongAdapter (private val songs: MutableCollection<Song>,
 
 
         if(interactive){
-            var isExpanded = position == mExpandedPosition
+            val isExpanded = position == mExpandedPosition
 
-            var params: RelativeLayout.LayoutParams
+            val params: RelativeLayout.LayoutParams
             if(isExpanded) {
                 params = RelativeLayout.LayoutParams(
                         RelativeLayout.LayoutParams.WRAP_CONTENT, RelativeLayout.LayoutParams.WRAP_CONTENT)
@@ -134,7 +133,6 @@ class SongAdapter (private val songs: MutableCollection<Song>,
         val title = if(interactive) view.song_name_completed else view.song_name
         val text = if(interactive) view.song_text_completed else view.song_text
         val artist = if(interactive) view.song_artist_completed else view.song_artist
-        val link = if(interactive) view.song_link_completed else view.song_link
         val image = if(interactive) view.song_image_completed else view.song_image
         val arrow = if(interactive) view.expand_arrow else null
         val expand_area = if(interactive) view.expand_area else null

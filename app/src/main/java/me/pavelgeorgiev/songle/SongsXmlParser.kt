@@ -41,7 +41,7 @@ class SongsXmlParser {
         val songs = ArrayList<Song>()
 
         parser.require(XmlPullParser.START_TAG, ns, SONGS_TAG)
-        var timestamp: String
+        val timestamp: String
         val dbReference =  FirebaseDatabase.getInstance()
                 .reference
                 .child("users")
@@ -54,7 +54,7 @@ class SongsXmlParser {
 //          Check if database timestamp is same
             dbReference.addValueEventListener(object: ValueEventListener {
                         override fun onCancelled(databaseError: DatabaseError?) {
-                            Log.w(TAG, "loadTimestamp:onCancelled", databaseError?.toException());
+                            Log.w(TAG, "loadTimestamp:onCancelled", databaseError?.toException())
                         }
 
                         override fun onDataChange(snapshot: DataSnapshot) {

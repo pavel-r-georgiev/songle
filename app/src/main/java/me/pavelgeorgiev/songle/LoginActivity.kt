@@ -3,25 +3,23 @@ package me.pavelgeorgiev.songle
 
 import android.content.Context
 import android.content.Intent
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.Snackbar
-import android.view.View
-import android.widget.TextView
-import android.widget.EditText
-import com.google.firebase.auth.FirebaseAuth
-
-import kotlinx.android.synthetic.main.activity_login_logout.*
-import com.google.firebase.auth.FirebaseUser
+import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
 import android.text.SpannableString
-import android.util.Log
 import android.text.TextUtils
 import android.text.style.UnderlineSpan
+import android.util.Log
+import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.EditText
 import android.widget.ProgressBar
-import android.support.v7.app.AlertDialog
-import com.google.firebase.database.DatabaseReference
+import android.widget.TextView
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.FirebaseDatabase
+import kotlinx.android.synthetic.main.activity_login_logout.*
 
 
 /**
@@ -171,7 +169,7 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                         Log.w(TAG, "signInAnonymously:failure", task.exception)
                         Snackbar.make(findViewById(R.id.login_logout_activity), task.exception!!.message.toString(),
                                 Snackbar.LENGTH_LONG)
-                                .show();
+                                .show()
                     }
                 }
     }

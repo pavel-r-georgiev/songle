@@ -1,13 +1,13 @@
 package me.pavelgeorgiev.songle
 
-import android.content.Intent
 import android.app.Dialog
+import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
-import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.design.widget.Snackbar
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
@@ -40,7 +40,7 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
 
         buildDrawerNav()
         mRecyclerView = recyclerView
-//        Improves perfomance on fixed size layout
+//        Improves performance on fixed size layout
         mRecyclerView.setHasFixedSize(true)
 
         mLayoutManager = LinearLayoutManager(this)

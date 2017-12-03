@@ -63,8 +63,6 @@
                 android:paddingTop="0dp"
                 android:progress="0"
                 android:progressTint="@color/primaryColor"
-                android:layout_alignParentLeft="true"
-                android:layout_alignParentStart="true"
                 />
 
         </FrameLayout>

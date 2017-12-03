@@ -89,7 +89,7 @@ class CommonFunctions {
 
 
                 if(toolbar != null){
-                    mDrawerBuilder.withToolbar(toolbar!!)
+                    mDrawerBuilder.withToolbar(toolbar)
                 }
 
             return mDrawerBuilder

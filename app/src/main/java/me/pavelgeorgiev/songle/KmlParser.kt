@@ -1,10 +1,8 @@
 package me.pavelgeorgiev.songle
 
 import android.content.Context
-import android.graphics.Bitmap
 import android.util.Xml
 import com.google.android.gms.maps.model.LatLng
-import com.squareup.picasso.Picasso
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
@@ -71,7 +69,7 @@ class KmlParser {
     @Throws(XmlPullParserException::class, IOException::class)
     private fun readStyle(parser: XmlPullParser): KmlStyle {
         parser.require(XmlPullParser.START_TAG, ns, STYLE_TAG)
-        var style = KmlStyle(parser.getAttributeValue(null, "id"))
+        val style = KmlStyle(parser.getAttributeValue(null, "id"))
 
         while(parser.next() != XmlPullParser.END_TAG) {
             if(parser.eventType != XmlPullParser.START_TAG){

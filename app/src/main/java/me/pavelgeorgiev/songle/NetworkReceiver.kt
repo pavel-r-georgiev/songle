@@ -4,21 +4,11 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.net.ConnectivityManager
-import android.support.v4.content.LocalBroadcastManager
 import android.net.NetworkInfo
-import me.pavelgeorgiev.songle.NetworkReceiver.NetworkStateReceiverListener
 
 
-
-
-
-
-
-class NetworkReceiver() : BroadcastReceiver() {
+class NetworkReceiver : BroadcastReceiver() {
     companion object {
-        val NETWORK_AVAILABLE_ACTION = "me.pavelgeorgiev.NetworkAvailable"
-        var IS_NETWORK_AVAILABLE = "isNetworkAvailable"
-
         /**
          * Checks if device is connected to the Internet
          */
@@ -29,7 +19,7 @@ class NetworkReceiver() : BroadcastReceiver() {
         }
     }
 
-    private var listeners = HashSet<NetworkStateReceiverListener>();
+    private var listeners = HashSet<NetworkStateReceiverListener>()
     private var connected: Boolean? = null
 
     override fun onReceive(context: Context, intent: Intent?) {
