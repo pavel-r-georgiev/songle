@@ -142,7 +142,7 @@ class MapsActivity :
                 .getInstance()
                 .reference
                 .child("users")
-                .child(mUser!!.uid)
+                .child(mUser.uid)
                 .child("progress")
                 .child("$mSongNumber-$mSongMapVersion")
 
@@ -211,7 +211,7 @@ class MapsActivity :
     }
     override fun onStop() {
         super.onStop()
-        if (mGoogleApiClient != null && mGoogleApiClient.isConnected) {
+        if (mGoogleApiClient.isConnected) {
             mGoogleApiClient.disconnect()
         }
     }
@@ -220,7 +220,7 @@ class MapsActivity :
         super.onPause()
 
 //        Stop location updates when Activity is not active
-        if (mGoogleApiClient != null && mGoogleApiClient.isConnected) {
+        if (mGoogleApiClient.isConnected) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this);
         }
         unregisterReceiver(mReceiver)
@@ -450,7 +450,7 @@ class MapsActivity :
     }
 
     private fun onMarkerClick(marker: Marker): Boolean {
-        if(marker == null || marker.title == "Current Position" || mCurrLocationMarker == null){
+        if(marker.title == "Current Position" || mCurrLocationMarker == null){
             return false
         }
         val distance = FloatArray(1)
@@ -667,9 +667,9 @@ class MapsActivity :
 
     private fun buildSlidingPanel() {
         sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
-        song_name_input.setOnEditorActionListener({view, actionId, event -> 
+        song_name_input.setOnEditorActionListener({ view, actionId, _ ->
             var handled = false
-            if((actionId === EditorInfo.IME_ACTION_DONE || actionId === EditorInfo.IME_NULL)){
+            if((actionId == EditorInfo.IME_ACTION_DONE || actionId == EditorInfo.IME_NULL)){
                 guessSong(view.text.toString())
                 handled = true
             }
@@ -731,8 +731,8 @@ class MapsActivity :
                     .setNeutralButton("New Song", { _, _ ->
                         startActivity(Intent(this, MainActivity::class.java))
                     })
-                    .setPositiveButton("Try again", { dialog, _ ->
-                        dialog.dismiss()
+                    .setPositiveButton("Try again", { d, _ ->
+                        d.dismiss()
                     })
                     .create()
         }
