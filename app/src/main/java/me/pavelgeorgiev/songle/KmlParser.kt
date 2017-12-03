@@ -8,6 +8,9 @@ import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import java.io.InputStream
 
+/**
+ * Parser for the KML data of songs
+ */
 class KmlParser {
     //    We don't use namespace
     private val ns = null

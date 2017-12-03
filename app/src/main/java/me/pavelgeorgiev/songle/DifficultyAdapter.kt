@@ -11,7 +11,9 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import kotlinx.android.synthetic.main.difficulty_list_item.view.*
 
-
+/**
+ * Adapter for the list of difficulties in DifficultyActivity
+ */
 class DifficultyAdapter(context: Context,
                         resource: Int,
                         private val difficulties: List<Difficulty>,

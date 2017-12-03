@@ -13,8 +13,14 @@ import com.mikepenz.materialdrawer.model.DividerDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem
 
+/**
+ * This class contains common functions used across activities
+ */
 class CommonFunctions {
     companion object {
+        /**
+         * Sings out the current user
+         */
         fun signOut(context: Context){
                 FirebaseAuth.getInstance().signOut()
                 val intent = Intent(context, LoginActivity::class.java)
@@ -27,6 +33,15 @@ class CommonFunctions {
                 activity.finish()
             }
 
+        /**
+         * Builds drawer navigation
+         *
+         * @param items items to be put in the navigation
+         * @param context context
+         * @param toolbar toolbar if one exists - used to place navigation icon
+         *
+         * @return DrawerBuilder from which the navigation can be built
+         */
         fun buildDrawerNav(items: Array<PrimaryDrawerItem>, context: Context, toolbar: Toolbar? = null): DrawerBuilder {
                 val item1 = PrimaryDrawerItem().
                         withIdentifier(1)
@@ -95,11 +110,26 @@ class CommonFunctions {
             return mDrawerBuilder
             }
 
+        /**
+         * Converts dp to pixels
+         *
+         * @param dp value of dp to convert
+         * @param context context
+         *
+         * @return pixel equivalent of specified dp on the device
+         */
         fun dpToPx(dp: Int, context: Context): Int {
             val density = context.resources.displayMetrics.density
             return Math.round(dp.toFloat() * density)
         }
 
+        /**
+         * Sets an alpha channel of specified color
+         * @param yourColor integer representing color resource
+         * @param alpha value of alpha channel to be set to the color
+         *
+         * @return Color with added alpha channel
+         */
         fun getColorWithAlpha(yourColor: Int, alpha: Int): Int {
             val red = Color.red(yourColor)
             val blue = Color.blue(yourColor)

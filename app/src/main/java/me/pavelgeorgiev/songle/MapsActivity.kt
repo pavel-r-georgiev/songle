@@ -46,7 +46,11 @@ import org.apmem.tools.layouts.FlowLayout
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 
-
+/**
+ * Activity contains map with placemarks words in a particular song.
+ * Activity also contains expandable section, where user can guess the current song and view the progress made.
+ * On some difficulties the activity also includes a countdown timer.
+ */
 @Suppress("DEPRECATION")
 class MapsActivity :
         AppCompatActivity(),
@@ -73,7 +77,7 @@ class MapsActivity :
     private lateinit var mDatabase: DatabaseReference
     private lateinit var mUser: FirebaseUser
     private lateinit var mDifficulty: String
-    private lateinit var mCountdownTimer: CountDownTimer
+    private var mCountdownTimer: CountDownTimer? = null
     private var mTimerMillisLeft = 0L
     private var mLyrics = LinkedHashMap<String, List<String>>()
     private var mLyricsViews = HashMap<String, FlowLayout>()
@@ -99,47 +103,24 @@ class MapsActivity :
                 .findFragmentById(R.id.mapFragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-
+//      Setup
         buildSnackbarAndDialogs()
         buildDrawerNav()
         buildSlidingPanel()
         buildGoogleApiClient()
+        setupDifficulty()
+        setupFirebase()
 
-        mSongMapVersion = intent.getStringExtra(getString(R.string.intent_song_map_version))
-        mSong = intent.getParcelableExtra(getString(R.string.intent_song_object))
-        mSongNumber = mSong.number
-        mSongTitle = mSong.title
+//       Setup network receiver
+        mReceiver =  NetworkReceiver()
+        mReceiver.addListener(this)
+        this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+    }
 
-        when(mSongMapVersion){
-            "1" ->{
-                mDifficulty = getString(R.string.difficulty_impossible)
-                COLLECT_DISTANCE_THRESHOLD = 40
-                TIMEOUT_SECONDS = 180
-            }
-            "2" ->{
-                mDifficulty = getString(R.string.difficulty_very_hard)
-                COLLECT_DISTANCE_THRESHOLD = 50
-                TIMEOUT_SECONDS = 360
-            }
-            "3" ->{
-                mDifficulty = getString(R.string.difficulty_hard)
-                COLLECT_DISTANCE_THRESHOLD = 60
-            }
-            "4" ->{
-                mDifficulty = getString(R.string.difficulty_medium)
-                COLLECT_DISTANCE_THRESHOLD = 75
-            }
-            "5" ->{
-                mDifficulty = getString(R.string.difficulty_easy)
-                COLLECT_DISTANCE_THRESHOLD = 100
-            }
-        }
-
-        val baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
-        val mapVersion = "map$mSongMapVersion.kml"
-        kmlUrl = "$baseUrl/$mapVersion"
-        lyricsUrl = "$baseUrl/words.txt"
-
+    /**
+     * Setup references for Firebase Authentication and Firebase Realtime Database
+     */
+    private fun setupFirebase() {
         mUser = FirebaseAuth.getInstance().currentUser!!
         mDatabase = FirebaseDatabase
                 .getInstance()
@@ -148,18 +129,60 @@ class MapsActivity :
                 .child(mUser.uid)
                 .child("progress")
                 .child("$mSongNumber-$mSongMapVersion")
+    }
 
-        mReceiver =  NetworkReceiver()
-        mReceiver.addListener(this)
-        this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
+    /**
+     * Get song object from the intent and setup class variables accordingly.
+     * Start the timer of difficulty has one.
+     */
+    private fun setupDifficulty() {
+        val baseUrl = "${getString(R.string.maps_base_url)}/$mSongNumber"
+        val mapVersion = "map$mSongMapVersion.kml"
+        kmlUrl = "$baseUrl/$mapVersion"
+        lyricsUrl = "$baseUrl/words.txt"
 
-        if(mDifficulty == getString(R.string.difficulty_very_hard) || mDifficulty == getString(R.string.difficulty_impossible)) {
+        mSongMapVersion = intent.getStringExtra(getString(R.string.intent_song_map_version))
+        mSong = intent.getParcelableExtra(getString(R.string.intent_song_object))
+        mSongNumber = mSong.number
+        mSongTitle = mSong.title
+
+        when (mSongMapVersion) {
+            "1" -> {
+                mDifficulty = getString(R.string.difficulty_impossible)
+                COLLECT_DISTANCE_THRESHOLD = 40
+                TIMEOUT_SECONDS = 180
+            }
+            "2" -> {
+                mDifficulty = getString(R.string.difficulty_very_hard)
+                COLLECT_DISTANCE_THRESHOLD = 50
+                TIMEOUT_SECONDS = 360
+            }
+            "3" -> {
+                mDifficulty = getString(R.string.difficulty_hard)
+                COLLECT_DISTANCE_THRESHOLD = 60
+            }
+            "4" -> {
+                mDifficulty = getString(R.string.difficulty_medium)
+                COLLECT_DISTANCE_THRESHOLD = 75
+            }
+            "5" -> {
+                mDifficulty = getString(R.string.difficulty_easy)
+                COLLECT_DISTANCE_THRESHOLD = 100
+            }
+        }
+
+        if (mDifficulty == getString(R.string.difficulty_very_hard) || mDifficulty == getString(R.string.difficulty_impossible)) {
             startTimer(TIMEOUT_SECONDS)
         } else {
             progressBar.visibility = View.GONE
         }
     }
 
+    /**
+     * Retrieves database entry for time left on the timer.
+     * If timer hasn't been started before starts a new timer.
+     * Otherwise starts a new timer with the remaining time.
+     */
     private fun startTimer(seconds: Int) {
         mDatabase.child("timeLeft").addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
@@ -171,13 +194,13 @@ class MapsActivity :
                 if (snapshot.exists()) {
                     mTimerMillisLeft = snapshot.value as Long
                     mCountdownTimer = MyCountDownTimer(mTimerMillisLeft, 1000)
-                    mCountdownTimer.start()
+                    mCountdownTimer!!.start()
                 } else {
                     AlertDialog.Builder(this@MapsActivity).setTitle("How about a challenge?")
                             .setMessage(getString(R.string.timeout_tooltip))
                             .setPositiveButton(R.string.play) { _, _ ->
                                 mCountdownTimer = MyCountDownTimer(seconds.toLong() * 1000, 1000)
-                                mCountdownTimer.start()
+                                mCountdownTimer!!.start()
                             }
                             .setNeutralButton("Change difficulty", { _, _ ->
                                 finish()
@@ -189,6 +212,9 @@ class MapsActivity :
 
     }
 
+    /**
+     * Build snackbar and error dialogs for the activity
+     */
     private fun buildSnackbarAndDialogs() {
         mNetworkSnackbar = Snackbar.make(
                 findViewById(R.id.sliding_layout),
@@ -217,6 +243,7 @@ class MapsActivity :
         if (mGoogleApiClient.isConnected) {
             mGoogleApiClient.disconnect()
         }
+        mCountdownTimer?.cancel()
     }
 
     override fun onPause() {
@@ -232,7 +259,9 @@ class MapsActivity :
         }
     }
 
-
+    /**
+     * Retrieves the KML data from the network
+     */
     private fun getKml() {
         if (NetworkReceiver.isNetworkConnected(this)) {
             DownloadFileService(this, DownloadFileService.KML_TYPE).execute(kmlUrl)
@@ -243,6 +272,10 @@ class MapsActivity :
         }
     }
 
+    /**
+     * Retrieves the lyrics for the current song from the DB.
+     * If entry is not available it retrieves the lyrics from the network.
+     */
     private fun getLyricsFromDatabase(){
         mDatabase.addListenerForSingleValueEvent(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
@@ -263,6 +296,9 @@ class MapsActivity :
         })
     }
 
+    /**
+     * Retrieves the lyrics for the current song from the network.
+     */
     private fun getLyrics() {
         if (NetworkReceiver.isNetworkConnected(this)) {
             DownloadFileService(this, DownloadFileService.TXT_TYPE).execute(lyricsUrl)
@@ -273,6 +309,10 @@ class MapsActivity :
         }
     }
 
+    /**
+     * Retrieves all progress that could have been made on the song - words collected, placemarks.
+     * Tries to retrieve from database. If entry not available tries to retrieve data from the network.
+     */
     private fun getProgress() {
         mDatabase.addListenerForSingleValueEvent(object: ValueEventListener {
                     override fun onCancelled(databaseError: DatabaseError?) {
@@ -344,6 +384,9 @@ class MapsActivity :
         }
     }
 
+    /**
+     * Invoked after file has failed to download. Shows Alert dialog
+     */
     override fun downloadFailed(errorMessage: String?, fileType: String) {
         AlertDialog.Builder(this).setTitle("Error")
                 .setMessage("Oops! Something went wrong while downloading the necessary files.($errorMessage)")
@@ -358,6 +401,9 @@ class MapsActivity :
         Log.d(TAG, errorMessage)
     }
 
+    /**
+     *  Callback for text file downloaded.
+     */
     private fun onTxtDownload(bytes: ByteArray) {
         val inputStream = bytes.inputStream()
 
@@ -371,6 +417,9 @@ class MapsActivity :
         mDatabase.child("lyrics").setValue(mLyrics)
     }
 
+    /**
+     * Builds layout for displaying the collected lyrics.
+     */
     private fun buildLyricsLayout() {
         mLyrics.forEach{ entry ->
             val lineView = LayoutInflater.from(this).inflate(R.layout.lyrics_line, null)
@@ -394,6 +443,11 @@ class MapsActivity :
 
     }
 
+    /**
+     * Parses a line from the lyrics file and stores the information in a HashMap.
+     *
+     * @param line line of the lyrics file
+     */
     private fun parseLine(line: String) {
         val lineList = line.trim().split("\\s+".toRegex())
         val lineNumber: Int
@@ -412,6 +466,11 @@ class MapsActivity :
         mLyrics.put(lineNumber.toString(), lineWords)
     }
 
+    /**
+     * Callback for KML file being downloaded.
+     *
+     * @param bytes byte array of the file downloaded
+     */
     private fun onKmlDownload(bytes: ByteArray) {
         val inputStream = bytes.inputStream()
         mPlacemarks = KmlParser().parse(inputStream, this)
@@ -420,6 +479,10 @@ class MapsActivity :
         onMarkersLoaded()
     }
 
+    /**
+     * Moves the camera to current location or last marker placed.
+     * Saves markers and words collected in the database.
+     */
     private fun onMarkersLoaded() {
         mMap.setOnMarkerClickListener { onMarkerClick(it) }
 
@@ -431,6 +494,12 @@ class MapsActivity :
         saveProgress()
     }
 
+    /**
+     * Creates a marker depending on the classification of the word.
+     *
+     * @param placemark Placemark object containing information necessary to render the marker
+     * @param location Location where the marker is to be placed
+     */
     private fun createMarker(placemark: Placemark, location: LatLng){
         mLastPlacemarkLocation = location
 
@@ -452,6 +521,14 @@ class MapsActivity :
 
     }
 
+    /**
+     * If marker is in range - collects the word and deletes the marker.
+     * Saves the collected word in the database.
+     *
+     * @param marker marker being clicked
+     *
+     * @return boolean showing if the marker has been collected
+     */
     private fun onMarkerClick(marker: Marker): Boolean {
         if(marker.title == "Current Position" || mCurrLocationMarker == null){
             return false
@@ -480,6 +557,14 @@ class MapsActivity :
         return true
     }
 
+    /**
+     * Calculates the distance between 2 LatLng objects
+     *
+     * @param point1 first point
+     * @param point2 second point
+     *
+     * @return distance between the points
+     */
     private fun distanceBetween(point1: LatLng, point2: LatLng, result: FloatArray){
         if(point1 == null || point2 == null){
             return
@@ -545,7 +630,9 @@ class MapsActivity :
         }
     }
 
-
+    /**
+     * Handles the action of the user after he has been given a prompt for permission request
+     */
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         when (requestCode) {
             PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION -> {
@@ -575,6 +662,8 @@ class MapsActivity :
 
     /**
      * Puts the activity in immersive sticky mode
+     *
+     * @param hasFocus shows if window has focus
      */
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
@@ -606,6 +695,9 @@ class MapsActivity :
         }
     }
 
+    /**
+     * Builds google API client
+     */
     private fun buildGoogleApiClient() {
         mGoogleApiClient = GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
@@ -614,6 +706,9 @@ class MapsActivity :
                 .build()
     }
 
+    /**
+     * Builds drawer navigation for the activity
+     */
     private fun buildDrawerNav() {
         val item1 = PrimaryDrawerItem().
                 withIdentifier(1)
@@ -656,6 +751,9 @@ class MapsActivity :
     }
 
 
+    /**
+     * Used to keep activity in immersive mode.
+     */
     private fun setWindowFlag(activity: Activity, bits: Int, on: Boolean) {
         val win = activity.window
         val winParams = win.attributes
@@ -668,6 +766,9 @@ class MapsActivity :
     }
 
 
+    /**
+     * Builds the sliding panel, which contains the progress and guess song input field
+     */
     private fun buildSlidingPanel() {
         sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
         song_name_input.setOnEditorActionListener({ view, actionId, _ ->
@@ -680,16 +781,25 @@ class MapsActivity :
         })
     }
 
+    /**
+     * Handles user try to guess the song
+     *
+     * @param songName user input
+     */
     private fun guessSong(songName: String) {
         val dialog: Dialog
 
+//      If user is correct
         if(mSongTitle.toLowerCase() == songName.toLowerCase()){
+//            Clear all progress
             mDatabase.removeValue()
             mCollectedWords.clear()
             mSong.addCompletedDifficulty(mSongMapVersion)
             mSong.completed = true
             mSongGuessed = true
+            mCountdownTimer?.cancel()
 
+//            Save song as completed in the database
             val dbReference = FirebaseDatabase
                     .getInstance()
                     .reference
@@ -716,7 +826,7 @@ class MapsActivity :
                 }
             })
 
-
+//          Build dialog for successful entry
             dialog = AlertDialog.Builder(this)
                     .setTitle("Success!")
                     .setCancelable(false)
@@ -728,6 +838,7 @@ class MapsActivity :
                     })
                     .create()
         } else {
+//          Build dialog for erroneous entry
             dialog = AlertDialog.Builder(this)
                     .setTitle("Wrong")
                     .setMessage("Keep trying you are close!")
@@ -739,11 +850,13 @@ class MapsActivity :
                     })
                     .create()
         }
-
+//          Show feedback to the user
         dialog.show()
     }
 
-
+    /**
+     * Toggles the drawer navigation menu
+     */
     private fun toggleMenu(view: View) {
         if (mDrawer.drawerLayout.isDrawerOpen(Gravity.LEFT)) {
             mDrawer.closeDrawer()
@@ -752,16 +865,22 @@ class MapsActivity :
         }
     }
 
+    /**
+     * Marks a word as collected
+     *
+     * @param word word that has been collected
+     * @param location location of word in text
+     */
      private fun collectWord(word: String?, location: String) {
          if(word == null){
              return
          }
-
+//       Put word as completed in the database
          val dbReference = mDatabase.child("words")
          val childUpdates = mutableMapOf<String, String>()
          childUpdates[location] = word
          dbReference.updateChildren(childUpdates as Map<String, String>)
-
+//       Update class variables and number in "words collected" header
          mCollectedWords.put(location, word)
          sliding_layout_header.text = buildWordsCollectedString(mCollectedWords.size)
 
@@ -776,11 +895,17 @@ class MapsActivity :
 
      }
 
+    /**
+     * Saves markers and words collected to the database
+     */
     private fun saveProgress(){
         mDatabase.child("markers").setValue(mPlacemarks)
         mDatabase.child("words").setValue(mCollectedWords)
     }
 
+    /**
+     * Builds correct string for singular word and multiple words collected
+     */
     private fun buildWordsCollectedString(size: Int) : String{
         val word = if(size == 1) "word" else "words"
         return "$size $word collected"
@@ -797,6 +922,11 @@ class MapsActivity :
         println(">>>> Connection to Google APIs could not be established. $TAG [onConnectionFailed")
     }
 
+    /**
+     * Changes the current location marker on location change
+     *
+     * @param location new location
+     */
     override fun onLocationChanged(location: Location?) {
         if(location == null) {
             println("$TAG [onLocationChanged] Location unknown")
@@ -814,7 +944,7 @@ class MapsActivity :
         markerOptions.title("Current Position")
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_CYAN))
         mCurrLocationMarker = mMap.addMarker(markerOptions)
-
+//      Move centre of word collection area to the new location
         if(mCollectArea == null) {
             val circleOptions = CircleOptions()
             val transparentColor = CommonFunctions.getColorWithAlpha(ContextCompat.getColor(this, R.color.secondaryColor), 40)
@@ -833,17 +963,25 @@ class MapsActivity :
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17.7F))
     }
 
+    /**
+     * Callback from NetworkReceiver
+     */
     override fun networkAvailable() {
         getSongData()
         mNetworkSnackbar.dismiss()
     }
 
+    /**
+     * Callback from NetworkReceiver
+     */
     override fun networkUnavailable() {
         getSongData()
         mNetworkSnackbar.show()
     }
 
-
+    /**
+     * Retrieves lyrics and placemarks for current song
+     */
     private fun getSongData() {
         if (mPlacemarks.isEmpty()) {
             getProgress()
@@ -853,7 +991,20 @@ class MapsActivity :
         }
     }
 
+    /**
+     * Class represent a countdown timer, which fills a progress bar.
+     * Used only of some difficulties.
+     *
+     * @constructor Creates a new timer with given length and given tick period
+     * @param millisInFuture length of timer
+     * @param countDownInterval time between ticks
+     */
     inner class MyCountDownTimer(millisInFuture: Long, countDownInterval: Long): CountDownTimer(millisInFuture, countDownInterval) {
+        /**
+         * Updates progress on every tick
+         *
+         * @param millisUntilFinished milliseconds until end of timer
+         */
         override fun onTick(millisUntilFinished: Long) {
 
             val progress = progressBar.max - (millisUntilFinished/1000).toInt()
@@ -861,6 +1012,10 @@ class MapsActivity :
             progressBar.progress = progress
         }
 
+        /**
+         * Triggered when timer finishes.
+         * Alerts user that time is up and resets progress.
+         */
         override  fun onFinish() {
             mDatabase.removeValue()
             mCollectedWords.clear()

@@ -20,8 +20,9 @@ import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
 
 
-
-
+/**
+ * Activity contains list of all songs - completed and not
+ */
 class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.NetworkStateReceiverListener {
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mLayoutManager: RecyclerView.LayoutManager
@@ -50,19 +51,23 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         mRecyclerView = recyclerView
 //        Improves perfomance on fixed size layout
         mRecyclerView.setHasFixedSize(true)
-
+//      Setup recycler view for the list of songs
         mLayoutManager = LinearLayoutManager(this)
         mRecyclerView.layoutManager = mLayoutManager
         mAdapter = SongAdapter(mSongs.values, this, false, mCompletedSongs)
         mRecyclerView.adapter = mAdapter
 
+//      Setup network receiver
         mReceiver =  NetworkReceiver()
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION))
-
+//      Retrieve the guessed songs - object only exists if user guessed a song and is redirected to MainActivity
         mGuessedSong = intent.getParcelableExtra(getString(R.string.intent_song_object))
     }
 
+    /**
+     * Retrieve completed songs from the Firebase database
+     */
     private fun getCompletedSongs() {
         mDatabase.child("completed-songs").addValueEventListener(object : ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
@@ -79,6 +84,9 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         })
     }
 
+    /**
+     * Builds drawer navigation for the activity
+     */
     private fun buildDrawerNav() {
         val item1 = PrimaryDrawerItem().
                 withIdentifier(1)
@@ -109,6 +117,11 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         this.unregisterReceiver(mReceiver)
     }
 
+    /**
+     * Retrieve completed songs and try to retrieve list of all songs.
+     * If network is available - download the list
+     * If network is NOT available - try to retrieve from Firebase database cache
+     */
     private fun getSongs() {
         getCompletedSongs()
         if (NetworkReceiver.isNetworkConnected(this)) {
@@ -122,7 +135,9 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         }
     }
 
-
+    /**
+     * Callback for DownloadFileService
+     */
     override fun downloadComplete(result: ByteArray, fileType: String) {
         val result = SongsXmlParser().parse(result.inputStream())
         mSongs.clear()
@@ -131,13 +146,9 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         mAdapter.notifyDataSetChanged()
     }
 
-    private fun markSongCompleted() {
-        if(mGuessedSong != null){
-            val song = mGuessedSong as Song
-            mCompletedSongs.put(song.title , song)
-        }
-    }
-
+    /**
+     * Callback for DownloadFileService
+     */
     override fun downloadFailed(errorMessage: String?, fileType: String) {
         AlertDialog.Builder(this@MainActivity).setTitle("Download Error")
                 .setMessage("Failed downloading the song list.")
@@ -148,6 +159,19 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
                 }.show()
     }
 
+    /**
+     * Mark song as completed if a completed song object is passed with the intent leading to MainActivity
+     */
+    private fun markSongCompleted() {
+        if(mGuessedSong != null){
+            val song = mGuessedSong as Song
+            mCompletedSongs.put(song.title , song)
+        }
+    }
+
+    /**
+     * Retrieve song list from Firebase DB
+     */
     private fun getSongsFromDatabase(){
         mDatabase.child("song-list").addValueEventListener(object: ValueEventListener {
             override fun onCancelled(databaseError: DatabaseError?) {
@@ -165,6 +189,9 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         mAdapter.notifyDataSetChanged()
     }
 
+    /**
+     * NetworkReceiver callback
+     */
     override fun networkAvailable() {
         if(mSongs.isEmpty()){
             getSongs()
@@ -175,6 +202,9 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
        mSnackbar?.dismiss()
     }
 
+    /**
+     * NetworkReceiver callback
+     */
     override fun networkUnavailable() {
         if(mSongs.isEmpty()){
             getSongs()

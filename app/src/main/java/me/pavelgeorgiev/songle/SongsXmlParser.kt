@@ -12,7 +12,11 @@ import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
 import java.io.InputStream
 import java.util.HashMap
+import kotlin.collections.ArrayList
 
+/**
+ * Parses song list data from XML
+ */
 class SongsXmlParser {
 //    We don't use namespace
     private val ns = null

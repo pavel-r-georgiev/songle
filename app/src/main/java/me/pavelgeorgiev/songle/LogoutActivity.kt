@@ -7,18 +7,20 @@ import android.support.v7.app.AppCompatActivity
 import android.text.SpannableString
 import android.text.TextUtils
 import android.text.style.UnderlineSpan
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ProgressBar
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.activity_login_logout.*
 
-import android.util.Log
-import com.google.firebase.auth.EmailAuthProvider
 
-
-
+/**
+ * Activity contains account management screen.
+ * There anonymous user can either sign out or link the account progress to an email and password account.
+ */
 class LogoutActivity : AppCompatActivity(), View.OnClickListener {
     private val TAG = "LogoutActivity"
     private lateinit var mAuth: FirebaseAuth
@@ -47,6 +49,9 @@ class LogoutActivity : AppCompatActivity(), View.OnClickListener {
     }
 
 
+    /**
+     * Updates the UI on account creation or sign out
+     */
     private fun updateUI(user: FirebaseUser?) {
         if (user != null) {
             title_text.text = getString(R.string.logout_title)
@@ -79,7 +84,9 @@ class LogoutActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
-
+    /**
+     * Validates the email and password fields in the form in the activity
+     */
     private fun validateForm(): Boolean {
         var valid = true
 

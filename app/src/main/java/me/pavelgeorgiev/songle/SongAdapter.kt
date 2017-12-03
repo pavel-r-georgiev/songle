@@ -2,13 +2,17 @@ package me.pavelgeorgiev.songle
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.support.v7.widget.CardView
 import android.support.v7.widget.RecyclerView
 import android.transition.ChangeBounds
 import android.transition.TransitionManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.RelativeLayout
+import android.widget.TextView
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import jp.wasabeef.picasso.transformations.BlurTransformation
@@ -129,14 +133,14 @@ class SongAdapter (private val songs: MutableCollection<Song>,
     }
 
     class ViewHolder(view: View, interactive: Boolean) : RecyclerView.ViewHolder(view) {
-        val cv = if(interactive) view.cv_completed else view.cv
-        val title = if(interactive) view.song_name_completed else view.song_name
-        val text = if(interactive) view.song_text_completed else view.song_text
-        val artist = if(interactive) view.song_artist_completed else view.song_artist
-        val image = if(interactive) view.song_image_completed else view.song_image
+        val cv: CardView = if(interactive) view.cv_completed else view.cv
+        val title: TextView = if(interactive) view.song_name_completed else view.song_name
+        val text: LinearLayout = if(interactive) view.song_text_completed else view.song_text
+        val artist: TextView = if(interactive) view.song_artist_completed else view.song_artist
+        val image: ImageView = if(interactive) view.song_image_completed else view.song_image
         val arrow = if(interactive) view.expand_arrow else null
         val expand_area = if(interactive) view.expand_area else null
-        val layout = if(interactive) view.song_completed_layout else view.song_layout
+        val layout: LinearLayout = if(interactive) view.song_completed_layout else view.song_layout
         val difficulties_list = if(interactive) view.difficulties_list else null
         val play_button = if(interactive) view.play_button else null
     }

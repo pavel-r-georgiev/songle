@@ -4,10 +4,7 @@
     <string name="title_difficulty_activity">Map difficulty level</string>
     <string name="songs_xml_url">https://www.inf.ed.ac.uk/teaching/courses/cslp/data/songs/songs.xml</string>
     <string name="maps_base_url">https://www.inf.ed.ac.uk/teaching/courses/cslp/data/songs</string>
-    <string name="drawer_open">Open navigation drawer</string>
-    <string name="drawer_close">Close navigation drawer</string>
     <string name="song_name_input_text">Song name</string>
-    <string name="collected_lyrics">Collected lyrics</string>
     <string name="lyrics">Lyrics</string>
     <string name="choose_difficulty">Please choose difficulty</string>
     <string name="difficulty_easy">Easy</string>
@@ -15,9 +12,7 @@
     <string name="difficulty_hard">Hard</string>
     <string name="difficulty_very_hard">Very Hard</string>
     <string name="difficulty_impossible">Impossible</string>
-    <string name="intent_song_number">SONG</string>
     <string name="intent_song_map_version">MAP_VERSION</string>
-    <string name="intent_song_difficulty">SONG_DIFFICULTY</string>
     <string name="unknown">Unknown</string>
     <string name="difficulty_easy_description">All words are visible on the map.</string>
     <string name="difficulty_medium_description">The very interesting words are hidden from the map.</string>
@@ -29,15 +24,12 @@
     <string name="offline_disclaimer_songs_list">Songle requires Internet connection to function correctly. Please connect to ensure your song list is up to date.</string>
     <string name="offline_disclaimer_general">Songle requires Internet connection. Please connect to continue.</string>
     <string name="offline_disclaimer_map">Progress made will be saved offline and synced with your other devices once connection is available. Please consider connecting to the Internet to improve your experience playing Songle.</string>
-    <string name="intent_song_title">SONG_NAME</string>
     <string name="intent_song_object">SONG_OBJECT</string>
     <string name="timeout_tooltip">The current difficulty includes a time constraint. On timeout all progress made is lost. \nTimer is restarted on every word pickup.\nFind the time remaining in the bottom part of your screen.\n<b>Good luck</b>!</string>
     <string name="timeout_message">Unfortunately, your time is over.</string>
     <string name="try_again">Try again</string>
     <string name="play">Play</string>
     <!-- Strings related to login -->
-    <string name="prompt_email">Email</string>
-    <string name="prompt_password">Password (optional)</string>
     <string name="action_sign_in">Sign in or register</string>
     <string name="action_sign_in_short">Sign in</string>
     <string name="error_invalid_email">This email address is invalid</string>
@@ -56,17 +48,22 @@
     <string name="signed_out">Please sign in</string>
     <string name="login_anonymously">or login anonymously.</string>
     <string name="login_status_fmt">Email User: %1$s</string>
-    <string name="user_status_fmt">User: %s</string>
     <string name="desc_songle">Songle</string>
     <string name="login_title_text">Welcome to Songle.</string>
     <string name="auth_failed">Authentication failed</string>
     <string name="dialog_login_disclaimer">No progress will be saved across devices. To enable progress synchronization you should log in now or create an account later within the app.</string>
     <string name="continue_button">CONTINUE</string>
-    <string name="cancel_button">CANCEL</string>
+    <string name="cancel_button">Cancel</string>
     <string name="title_activity_logout">Sign out</string>
     <string name="logout_title">We hate to see you go.</string>
     <string name="go_back_to_songs">Return to exploring new songs</string>
     <string name="link_account">Link Account</string>
     <string name="account_management_title">Link your account to save your progress.</string>
+    <string name="difficulty_image_description">Difficulty image</string>
+    <string name="song_image_description">Song image</string>
+    <string name="song_image_content_description">Song Image</string>
+    <string name="completed_song_image_description">Completed song image</string>
+    <string name="expand_arrow_description">Expand arrow</string>
+    <string name="play_song">Play Song</string>
 
 </resources>

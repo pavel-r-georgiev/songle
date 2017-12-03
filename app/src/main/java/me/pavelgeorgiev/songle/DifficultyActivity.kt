@@ -5,6 +5,9 @@ import android.support.v7.app.AppCompatActivity
 import android.widget.ListView
 import kotlinx.android.synthetic.main.activity_difficulty.*
 
+/**
+ * Activity contains difficulty option for a particular song
+ */
 class DifficultyActivity : AppCompatActivity(){
     private lateinit var mSongNumber: String
     private lateinit var mSongTitle: String

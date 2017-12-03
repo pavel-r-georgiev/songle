@@ -6,7 +6,9 @@ import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 
-
+/**
+ * Receiver tracks availability of network
+ */
 class NetworkReceiver : BroadcastReceiver() {
     companion object {
         /**
@@ -38,11 +40,17 @@ class NetworkReceiver : BroadcastReceiver() {
         notifyStateToAll()
     }
 
+    /**
+     * Notifies all listeners that the state of the network changed
+     */
     private fun notifyStateToAll() {
         for (listener in listeners)
             notifyState(listener)
     }
 
+    /**
+     * Calls callback functions in the listener
+     */
     private fun notifyState(listener: NetworkStateReceiverListener?) {
         if (connected == null || listener == null)
             return

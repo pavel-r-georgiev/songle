@@ -23,7 +23,7 @@ import kotlinx.android.synthetic.main.activity_login_logout.*
 
 
 /**
- * A login screen that offers login via email/password.
+ * Activity contains a login screen that offers login or sign-up via email/password.
  */
 class LoginActivity : AppCompatActivity(), View.OnClickListener {
     private val TAG = "LoginActivity"
@@ -137,6 +137,9 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
                 }
     }
 
+    /**
+     * Shows dialog with disclaimer of disadvantages of anonymous login
+     */
     private fun preAnonymousLogin() {
         val alertDialog = AlertDialog.Builder(this@LoginActivity).create()
         alertDialog.setTitle("Saved progress")
@@ -155,6 +158,9 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         alertDialog.show()
     }
 
+    /**
+     * Sings in the user anonymously
+     */
     private fun signInAnonymously() {
         Log.d(TAG, "signInAnonymously")
         mAuth.signInAnonymously()
@@ -180,6 +186,9 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     }
 
 
+    /**
+     * Validates the email and password fields in the form in the activity
+     */
     private fun validateForm(): Boolean {
         var valid = true
 
@@ -213,11 +222,18 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
     }
 
 
+    /**
+     * Hides the software keyboard.
+     * Used to hide the keyboard on activity startup since login form has focus.
+     */
     private fun hideSoftKeyboard(view: View) {
         val imm = getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
+    /**
+     * Updates the UI on user log in or sign up
+     */
     private fun updateUI(user: FirebaseUser?) {
         hideProgressDialog()
         if (user != null) {
@@ -241,6 +257,9 @@ class LoginActivity : AppCompatActivity(), View.OnClickListener {
         }
     }
 
+    /**
+     * Handles onClick for buttons on the activity's screen
+     */
     override fun onClick(v: View) {
         val i = v.id
         when (i) {

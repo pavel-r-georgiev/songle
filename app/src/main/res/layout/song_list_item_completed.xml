@@ -25,7 +25,7 @@
                 android:layout_width="100dp"
                 android:layout_height="100dp"
                 android:scaleType="centerCrop"
-                android:contentDescription="Completed song image" />
+                android:contentDescription="@string/completed_song_image_description" />
 
             <LinearLayout
                 android:id="@+id/song_text_completed"
@@ -64,7 +64,7 @@
                 android:gravity="center"
                 android:layout_margin="5dp"
                 android:layout_centerVertical="true"
-                android:contentDescription="Expand arrow" />
+                android:contentDescription="@string/expand_arrow_description" />
 
             <LinearLayout
                 android:id="@+id/expand_area"
@@ -87,7 +87,7 @@
                     android:id="@+id/play_button"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Play Song"
+                    android:text="@string/play_song"
                     android:textColor="@color/secondaryColor"
                     android:background="@null"/>
 

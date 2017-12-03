@@ -3,13 +3,22 @@ package me.pavelgeorgiev.songle
 import android.os.Parcel
 import android.os.Parcelable
 import java.util.HashMap
+import kotlin.collections.ArrayList
 
+/**
+ * Data class containing all information about a class.
+ * Implements Parcelable so it can be sent across activities
+ */
 data class Song(val number: String,
                 val artist: String,
                 val title: String,
                 val link: String,
                 var completed: Boolean = false,
                 var difficultiesCompleted: ArrayList<String>? = ArrayList()): Parcelable{
+    /**
+     * Secondary contructor to build from parcel
+     * @param parcel data for the song
+     */
     constructor(parcel: Parcel) : this(
             parcel.readString(),
             parcel.readString(),
@@ -17,7 +26,10 @@ data class Song(val number: String,
             parcel.readString(),
             parcel.readByte() != 0.toByte(),
             parcel.createStringArrayList())
-
+    /**
+     * Secondary contructor to build from database entry
+     * @param map data for the song
+     */
     constructor(map: HashMap<String, Any>) :
             this(
                     map["number"] as String,
@@ -28,12 +40,19 @@ data class Song(val number: String,
                     map["difficultiesCompleted"] as ArrayList<String>?
                 )
 
+    /**
+     * Adds difficulty to the completed difficulties in the song
+     * @param difficulty String representing the difficulty completed
+     */
     fun addCompletedDifficulty(difficulty: String){
         if(!difficultiesCompleted!!.contains(difficulty)){
             difficultiesCompleted!!.add(difficulty)
         }
     }
 
+    /**
+     * Writes Song object to a Parcel
+     */
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(number)
         parcel.writeString(artist)

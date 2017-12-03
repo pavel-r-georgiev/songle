@@ -18,6 +18,10 @@ import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
 
+/**
+ * Activity shows a list of completed songs.
+ * Completed songs contain information about the difficulties they have been completed on.
+ */
 class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateReceiverListener{
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mLayoutManager: RecyclerView.LayoutManager
@@ -43,6 +47,7 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
 //        Improves performance on fixed size layout
         mRecyclerView.setHasFixedSize(true)
 
+//        Setup recycler view for completed song list
         mLayoutManager = LinearLayoutManager(this)
         mRecyclerView.layoutManager = mLayoutManager
         mAdapter = SongAdapter(mCompletedSongs, this, true, recyclerView = recyclerView)
@@ -59,14 +64,16 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
                 .setPositiveButton(android.R.string.ok) { _, _ -> }
                 .create()
 
-
+//      Setup network receiver
         mReceiver =  NetworkReceiver()
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
         getCompletedSongs()
     }
 
-
+    /**
+     * Builds drawer navigation for current activity
+     */
     private fun buildDrawerNav() {
         val item1 = PrimaryDrawerItem().
                 withIdentifier(1)
@@ -97,6 +104,9 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
         this.unregisterReceiver(mReceiver)
     }
 
+    /**
+     * Retrieves the completed songs from the database
+     */
     private fun getCompletedSongs() {
         if (!NetworkReceiver.isNetworkConnected(this) && !mErrorDialog.isShowing) {
             mErrorDialog.show()
@@ -118,7 +128,6 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
         })
         mAdapter.notifyDataSetChanged()
     }
-
 
     override fun networkAvailable() {
         getCompletedSongs()
