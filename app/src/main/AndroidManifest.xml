@@ -28,7 +28,6 @@
         android:supportsRtl="true"
         android:theme="@style/SongleTheme"
         android:name=".Application"
-        android:largeHeap="true"
         >
         <activity android:name=".MainActivity"/>
         <!--
