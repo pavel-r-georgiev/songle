@@ -213,6 +213,16 @@ class MapsActivity :
     }
 
     /**
+     * Resets the currently running timer. Invoked on word collection.
+     */
+    private fun resetTimer(){
+        mCountdownTimer?.cancel()
+        mDatabase.child("timeLeft").removeValue()
+        mCountdownTimer = MyCountDownTimer(TIMEOUT_SECONDS * 1000L, 1000)
+        mCountdownTimer!!.start()
+    }
+
+    /**
      * Build snackbar and error dialogs for the activity
      */
     private fun buildSnackbarAndDialogs() {
@@ -553,7 +563,7 @@ class MapsActivity :
         mDatabase.child("markers").child(marker.title).removeValue()
         mPlacemarks.remove(marker.title)
         marker.remove()
-
+        resetTimer()
         return true
     }
 
