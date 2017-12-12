@@ -263,10 +263,14 @@ class MapsActivity :
         if (mGoogleApiClient.isConnected) {
             LocationServices.FusedLocationApi.removeLocationUpdates(mGoogleApiClient, this)
         }
-        unregisterReceiver(mReceiver)
-        if(!mSongGuessed) {
+        if(!mSongGuessed && mTimerMillisLeft > 0) {
             mDatabase.child("timeLeft").setValue(mTimerMillisLeft)
         }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(mReceiver)
     }
 
     /**
