@@ -1,4 +1,4 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Adapters
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -18,6 +18,10 @@ import com.squareup.picasso.Picasso
 import jp.wasabeef.picasso.transformations.BlurTransformation
 import kotlinx.android.synthetic.main.song_list_item.view.*
 import kotlinx.android.synthetic.main.song_list_item_completed.view.*
+import me.pavelgeorgiev.songle.*
+import me.pavelgeorgiev.songle.Activities.DifficultyActivity
+import me.pavelgeorgiev.songle.Objects.Difficulty
+import me.pavelgeorgiev.songle.Objects.Song
 
 
 class SongAdapter (private val songs: MutableCollection<Song>,
@@ -34,7 +38,7 @@ class SongAdapter (private val songs: MutableCollection<Song>,
         val itemLayout =
                 if(interactive) R.layout.song_list_item_completed
                 else R.layout.song_list_item
-        return  ViewHolder(layoutInflater.inflate(itemLayout, parent, false), interactive)
+        return ViewHolder(layoutInflater.inflate(itemLayout, parent, false), interactive)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -105,7 +109,7 @@ class SongAdapter (private val songs: MutableCollection<Song>,
                 val difficulties = song.difficultiesCompleted!!.
                         map { it.toInt() }
                         .sortedDescending()
-                        .map {Difficulty.fromMapVersion(it)}
+                        .map { Difficulty.fromMapVersion(it) }
                         .joinToString(", ", "Difficulties completed: ")
                 holder.difficulties_list!!.text = difficulties
             }

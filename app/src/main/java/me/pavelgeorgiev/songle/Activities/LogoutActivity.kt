@@ -1,4 +1,4 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Activities
 
 import android.content.Intent
 import android.os.Bundle
@@ -15,6 +15,8 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import kotlinx.android.synthetic.main.activity_login_logout.*
+import me.pavelgeorgiev.songle.CommonFunctions
+import me.pavelgeorgiev.songle.R
 
 
 /**
@@ -80,7 +82,7 @@ class LogoutActivity : AppCompatActivity(), View.OnClickListener {
             status.text = getString(R.string.login_status_fmt,
                     email)
         } else {
-           CommonFunctions.signOut(this)
+            CommonFunctions.signOut(this)
         }
     }
 

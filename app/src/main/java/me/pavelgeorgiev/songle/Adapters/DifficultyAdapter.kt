@@ -1,4 +1,4 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Adapters
 
 import android.content.Context
 import android.content.Intent
@@ -10,6 +10,10 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import kotlinx.android.synthetic.main.difficulty_list_item.view.*
+import me.pavelgeorgiev.songle.Objects.Difficulty
+import me.pavelgeorgiev.songle.Activities.MapsActivity
+import me.pavelgeorgiev.songle.R
+import me.pavelgeorgiev.songle.Objects.Song
 
 /**
  * Adapter for the list of difficulties in DifficultyActivity

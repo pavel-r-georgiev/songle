@@ -1,8 +1,10 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Parsers
 
 import android.content.Context
 import android.util.Xml
 import com.google.android.gms.maps.model.LatLng
+import me.pavelgeorgiev.songle.Objects.KmlStyle
+import me.pavelgeorgiev.songle.Objects.Placemark
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException

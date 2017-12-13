@@ -1,4 +1,4 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Objects
 
 import com.google.android.gms.maps.model.LatLng
 import java.util.*
@@ -19,7 +19,7 @@ data class Placemark(val name: String, val description: String, val location: La
         /**
          * Builds a Placemark from JSON data from database
          */
-        fun build(map: HashMap<String, Any>): Placemark{
+        fun build(map: HashMap<String, Any>): Placemark {
             val locationMap = map["location"] as HashMap<String, Double>
             val location = LatLng(locationMap["latitude"]!!, locationMap["longitude"]!!)
             val name = map["name"] as String

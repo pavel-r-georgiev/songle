@@ -29,7 +29,7 @@
         android:theme="@style/SongleTheme"
         android:name=".Application"
         >
-        <activity android:name=".MainActivity"/>
+        <activity android:name=".Activities.MainActivity"/>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -43,15 +43,15 @@
             android:value="@string/google_maps_key" />
 
         <activity
-            android:name=".MapsActivity"
+            android:name=".Activities.MapsActivity"
             android:label="@string/title_activity_maps"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateHidden" />
         <activity
-            android:name=".DifficultyActivity"
+            android:name=".Activities.DifficultyActivity"
             android:label="@string/title_difficulty_activity" />
         <activity
-            android:name=".LoginActivity"
+            android:name=".Activities.LoginActivity"
             android:label="@string/title_activity_login"
             android:windowSoftInputMode="stateHidden">
             <intent-filter>
@@ -61,7 +61,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".LogoutActivity"
+            android:name=".Activities.LogoutActivity"
             android:label="@string/title_activity_logout"
             android:windowSoftInputMode="stateHidden" />
 
@@ -73,7 +73,7 @@
             </intent-filter>
         </receiver>
 
-        <activity android:name=".CompletedActivity" />
+        <activity android:name=".Activities.CompletedActivity" />
     </application>
 
 </manifest>

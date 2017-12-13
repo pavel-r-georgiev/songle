@@ -1,4 +1,4 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Parsers
 
 import android.util.Log
 import android.util.Xml
@@ -7,6 +7,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import me.pavelgeorgiev.songle.Objects.Song
 import org.xmlpull.v1.XmlPullParser
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException

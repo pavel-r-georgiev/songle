@@ -1,9 +1,13 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Activities
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.ListView
 import kotlinx.android.synthetic.main.activity_difficulty.*
+import me.pavelgeorgiev.songle.Adapters.DifficultyAdapter
+import me.pavelgeorgiev.songle.Objects.Difficulty
+import me.pavelgeorgiev.songle.R
+import me.pavelgeorgiev.songle.Objects.Song
 
 /**
  * Activity contains difficulty option for a particular song

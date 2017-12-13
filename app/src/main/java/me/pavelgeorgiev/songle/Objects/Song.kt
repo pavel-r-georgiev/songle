@@ -1,4 +1,4 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Objects
 
 import android.os.Parcel
 import android.os.Parcelable
@@ -45,6 +45,10 @@ data class Song(val number: String,
      * @param difficulty String representing the difficulty completed
      */
     fun addCompletedDifficulty(difficulty: String){
+        if(difficultiesCompleted == null){
+            difficultiesCompleted = ArrayList()
+        }
+
         if(!difficultiesCompleted!!.contains(difficulty)){
             difficultiesCompleted!!.add(difficulty)
         }

@@ -1,4 +1,4 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Objects
 
 data class Difficulty(val difficulty: String,
                       val description: String,

@@ -12,6 +12,8 @@ import com.mikepenz.materialdrawer.DrawerBuilder
 import com.mikepenz.materialdrawer.model.DividerDrawerItem
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import com.mikepenz.materialdrawer.model.ProfileDrawerItem
+import me.pavelgeorgiev.songle.Activities.LoginActivity
+import me.pavelgeorgiev.songle.Activities.LogoutActivity
 
 /**
  * This class contains common functions used across activities

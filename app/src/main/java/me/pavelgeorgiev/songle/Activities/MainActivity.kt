@@ -1,4 +1,4 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Activities
 
 import android.content.Intent
 import android.content.IntentFilter
@@ -18,6 +18,10 @@ import com.google.firebase.database.ValueEventListener
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
+import me.pavelgeorgiev.songle.*
+import me.pavelgeorgiev.songle.Adapters.SongAdapter
+import me.pavelgeorgiev.songle.Objects.Song
+import me.pavelgeorgiev.songle.Parsers.SongsXmlParser
 
 
 /**
@@ -58,7 +62,7 @@ class MainActivity : AppCompatActivity(), DownloadFileCallback, NetworkReceiver.
         mRecyclerView.adapter = mAdapter
 
 //      Setup network receiver
-        mReceiver =  NetworkReceiver()
+        mReceiver = NetworkReceiver()
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(android.net.ConnectivityManager.CONNECTIVITY_ACTION))
 //      Retrieve the guessed songs - object only exists if user guessed a song and is redirected to MainActivity

@@ -1,4 +1,4 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Activities
 
 import android.Manifest
 import android.app.Activity
@@ -42,6 +42,11 @@ import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import kotlinx.android.synthetic.main.activity_maps.*
 import kotlinx.android.synthetic.main.lyrics_line.view.*
+import me.pavelgeorgiev.songle.*
+import me.pavelgeorgiev.songle.Objects.Placemark
+import me.pavelgeorgiev.songle.Objects.Song
+import me.pavelgeorgiev.songle.Parsers.KmlParser
+import me.pavelgeorgiev.songle.R
 import org.apmem.tools.layouts.FlowLayout
 import org.xmlpull.v1.XmlPullParserException
 import java.io.IOException
@@ -59,7 +64,7 @@ class MapsActivity :
         GoogleApiClient.OnConnectionFailedListener,
         LocationListener,
         DownloadFileCallback,
-        NetworkReceiver.NetworkStateReceiverListener{
+        NetworkReceiver.NetworkStateReceiverListener {
 
     private lateinit var mMap: GoogleMap
     private lateinit var mGoogleApiClient: GoogleApiClient
@@ -118,7 +123,7 @@ class MapsActivity :
         }
 
 //       Setup network receiver
-        mReceiver =  NetworkReceiver()
+        mReceiver = NetworkReceiver()
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
     }

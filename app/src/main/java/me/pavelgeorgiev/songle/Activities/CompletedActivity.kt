@@ -1,4 +1,4 @@
-package me.pavelgeorgiev.songle
+package me.pavelgeorgiev.songle.Activities
 
 import android.app.Dialog
 import android.content.Intent
@@ -17,12 +17,17 @@ import com.google.firebase.database.*
 import com.mikepenz.materialdrawer.Drawer
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem
 import kotlinx.android.synthetic.main.activity_main.*
+import me.pavelgeorgiev.songle.Adapters.SongAdapter
+import me.pavelgeorgiev.songle.CommonFunctions
+import me.pavelgeorgiev.songle.NetworkReceiver
+import me.pavelgeorgiev.songle.Objects.Song
+import me.pavelgeorgiev.songle.R
 
 /**
  * Activity shows a list of completed songs.
  * Completed songs contain information about the difficulties they have been completed on.
  */
-class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateReceiverListener{
+class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateReceiverListener {
     private lateinit var mRecyclerView: RecyclerView
     private lateinit var mLayoutManager: RecyclerView.LayoutManager
     private lateinit var mAdapter: RecyclerView.Adapter<SongAdapter.ViewHolder>
@@ -65,7 +70,7 @@ class CompletedActivity : AppCompatActivity(), NetworkReceiver.NetworkStateRecei
                 .create()
 
 //      Setup network receiver
-        mReceiver =  NetworkReceiver()
+        mReceiver = NetworkReceiver()
         mReceiver.addListener(this)
         this.registerReceiver(mReceiver, IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION))
         getCompletedSongs()
