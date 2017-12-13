@@ -68,7 +68,6 @@ class MapsActivity :
     private lateinit var mSong: Song
     private lateinit var mSongMapVersion: String
     private lateinit var mDrawer: Drawer
-    private lateinit var mLastPlacemarkLocation: LatLng
     private lateinit var kmlUrl: String
     private lateinit var lyricsUrl: String
     private lateinit var mReceiver: NetworkReceiver
@@ -77,6 +76,7 @@ class MapsActivity :
     private lateinit var mDatabase: DatabaseReference
     private lateinit var mUser: FirebaseUser
     private lateinit var mDifficulty: String
+    private var mLastPlacemarkLocation: LatLng? = null
     private var mCountdownTimer: CountDownTimer? = null
     private var mTimerMillisLeft = 0L
     private var mLyrics = LinkedHashMap<String, List<String>>()
@@ -502,7 +502,7 @@ class MapsActivity :
 
         if(mCurrLocationMarker != null){
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mCurrLocationMarker!!.position, 18F))
-        } else {
+        } else if(mLastPlacemarkLocation != null){
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(mLastPlacemarkLocation,18F))
         }
         saveProgress()

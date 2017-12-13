@@ -21,7 +21,8 @@
         android:layout_margin="8dp"
         android:layout_marginEnd="8dp"
         android:divider="@android:color/transparent"
-        android:dividerHeight="15.0sp" />
+        android:dividerHeight="15.0sp"
+        android:layoutAnimation="@anim/layout_animation_fall_down"/>
 
 </LinearLayout>
 
