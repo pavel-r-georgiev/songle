@@ -21,7 +21,7 @@ import me.pavelgeorgiev.songle.Activities.LogoutActivity
 class CommonFunctions {
     companion object {
         /**
-         * Sings out the current user
+         * Signs out the current user
          */
         fun signOut(context: Context){
                 FirebaseAuth.getInstance().signOut()
